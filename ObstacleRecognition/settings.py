@@ -38,8 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'rest_framework',
+
     "recognition.apps.RecognitionConfig",
-    "web.apps.WebConfig"
+    
+    'tensorflow',
 ]
 
 MIDDLEWARE = [
