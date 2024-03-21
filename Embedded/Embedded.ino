@@ -3,7 +3,6 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include "camera_pins.h"
-#include "Arduino.h"
 #include <ArduinoJson.h>
 #include "SPIFFS.h"
 #include "ESPAsyncWebServer.h"
@@ -21,13 +20,21 @@
 unsigned int wifiMode = WIFI_MODE_STA;  // WIFI_MODE_AP, WIFI_MODE_STA
 
 // Station config
-const char* ssid = "Đô";
-const char* password = "123467891011";
+const char* ssid = "5 AE Siêu Nhân";
+const char* password = "0364651600";
 const String apiEndpoint = "http://192.168.43.209:8000/detect/";
 
 // Access Point config
 const char* localSsid = "MyESP32AP";
 const char* localPassword = "12345678";
+
+// WebSocket config
+uint8_t socketClientCount = 0; // Số lượng client đang kết nối
+unsigned int responseTimer = 0;
+const unsigned int requestInterval = 100; // (ms)
+
+// Timer
+unsigned int recognizeTimer = 0;
 
 
 UltrasonicSensorReader distanceReader(TRIG_PIN, ECHO_PIN);
@@ -209,7 +216,7 @@ void handleWebSocketMessage(uint32_t clientId, void *arg, uint8_t *data, size_t 
     String message = (char*)data;
     //Serial.println(message);
 
-    if (message == "GET IMG") {
+    if (message == "GI") {
       // Capture and send image to client
       camera_fb_t* fb = esp_camera_fb_get();
       if (!fb) {
@@ -226,14 +233,24 @@ void handleWebSocketMessage(uint32_t clientId, void *arg, uint8_t *data, size_t 
 void websocketEventHandler(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {
   switch (type) {
     case WS_EVT_CONNECT:
-      Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+      ++socketClientCount;
+      if (socketClientCount <= 1) {
+        Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+      } else {
+        Serial.println("Connection limit per client reached, rejecting client");
+        client->close();
+      }
       break;
     case WS_EVT_DISCONNECT:
       Serial.printf("WebSocket client #%u disconnected\n", client->id());
+      --socketClientCount;
       break;
     case WS_EVT_DATA:
+      if (millis() - responseTimer > requestInterval) {
         handleWebSocketMessage(client->id(), arg, data, len);
-        break;
+        responseTimer = millis();
+      }
+      break;
     case WS_EVT_PONG:
     case WS_EVT_ERROR:
      break;
@@ -355,7 +372,7 @@ void setup() {
 
 void loop() {
   if (wifiMode & WIFI_MODE_AP) {
-    delay(1000);
+    delay(10000);
     return;
   }
 
@@ -363,12 +380,14 @@ void loop() {
   Serial.print("Distance from obstacle : ");
   Serial.print(disFromObs);
   Serial.println(" (cm)");
-
-  if (disFromObs < 100) {
-    Serial.println("Start recognization");
-    recognizeObstacle();
-    delay(1000);
+  
+  if (millis() - recognizeTimer > 1000) {
+    if (disFromObs < 100) {
+      Serial.println("Start recognization");
+      recognizeObstacle();
+      recognizeTimer = millis();
+    }
   }
-
+  
   delay(200);
 }

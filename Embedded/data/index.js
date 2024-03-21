@@ -24,7 +24,7 @@ function startStream() {
     initWebSocket();
 
     streamIntervelID = setInterval(() => {
-        websocket.send('GET IMG');
+        websocket.send('GI');
     }, 100);
 
 
