@@ -6,6 +6,7 @@
 #include <ArduinoJson.h>
 #include "SPIFFS.h"
 #include "ESPAsyncWebServer.h"
+#include "AsyncJson.h"
 #include "UltrasonicSensorReader.h"
 #include "FileOperation.h"
 
@@ -16,12 +17,16 @@
 #define TRIG_PIN 12 // PWM trigger
 #define ECHO_PIN 13 // PWM Output 0-25000US, Every 50US represent 1cm
 
+// Configuration file name
+#define PUBLIC_WIFI_CONF_FILE "/public-wifi-config.txt"
+#define LOCAL_WIFI_CONF_FILE "/local-wifi-config.txt"
 
 unsigned int wifiMode = WIFI_MODE_STA;  // WIFI_MODE_AP, WIFI_MODE_STA
 
 // Station config
-const char* ssid = "5 AE Siêu Nhân";
-const char* password = "0364651600";
+#define DEFAULT_SSID "5 AE Siêu Nhân"
+#define DEFAULT_PASSWORD "0364651600"
+
 const String apiEndpoint = "http://192.168.43.209:8000/detect/";
 
 // Access Point config
@@ -88,10 +93,37 @@ void initCamera() {
   }
 }
 
-bool connectWifi(int timeoutInMilis = 15000) {
+bool getWifiCredential(String& ssid, String& password) {
+  // Read file config to get ssid and password
+  String jsonStr = FileOperation::readFile(PUBLIC_WIFI_CONF_FILE);
+  JsonDocument doc;
+  DeserializationError error = deserializeJson(doc, jsonStr);
+
+  if (jsonStr == "" || error) {
+    Serial.print("ConnectWifi(): deserializeJson() failed - ");
+    Serial.println(error.c_str());
+
+    ssid = DEFAULT_SSID;
+    password = DEFAULT_PASSWORD;
+    return false;
+  } 
+  
+  ssid = doc["name"].as<String>();
+  password = doc["password"].as<String>();
+  return true;
+}
+
+bool connectWifi(int timeoutInMilis = 10000) {
   unsigned long timeStone = millis();
-  // Connect to Wi-Fi
-  Serial.print("Connecting to WiFi");
+
+  // Try reading wifi config file to get ssid and password
+  String ssid, password;
+  if (getWifiCredential(ssid, password)) {
+    Serial.print("Connecting to WiFi");
+  } else {
+    Serial.print("Try connecting wifi by using default credentials");
+  }
+  
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     if (millis() - timeStone > timeoutInMilis) 
@@ -196,19 +228,6 @@ void recognizeObstacle() {
   esp_camera_fb_return(fb);
 }
 
-String readFile(const char *path) {
-    // Đọc nội dung từ tệp và trả về dưới dạng String
-    File file = SPIFFS.open(path, "r");
-    if (!file) {
-        Serial.println("Failed to open file for reading");
-        return "";
-    }
-
-    String content = file.readString();
-    file.close();
-    return content;
-}
-
 void handleWebSocketMessage(uint32_t clientId, void *arg, uint8_t *data, size_t len) {
   AwsFrameInfo *info = (AwsFrameInfo*)arg;
   if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
@@ -290,20 +309,24 @@ void startWebServer() {
     printRequestInfo(request);
     
     AsyncResponseStream *response = request->beginResponseStream("application/json");
-    
     JsonDocument wifiInfo;
-    String name = "";
-    if (wifiMode & WIFI_MODE_STA) {
-      name = WiFi.SSID();
-    } else {
-      name = WiFi.softAPSSID();
-    }
-    wifiInfo["name"] = name;
+    
+    String ssid, password;
+    getWifiCredential(ssid, password);
+    wifiInfo["name"] = ssid;
 
     serializeJson(wifiInfo, *response);
     request->send(response);
   });
 
+  server.addHandler(new AsyncCallbackJsonWebHandler("/change-public-wifi", [](AsyncWebServerRequest *request, JsonVariant &json) {
+    printRequestInfo(request);
+    
+    String jsonStr = json.as<String>();
+    FileOperation::writeFile(PUBLIC_WIFI_CONF_FILE, jsonStr.c_str());
+    request->send(200);
+  }));
+  
   server.serveStatic("/", SPIFFS, "/");
   
   server.begin();
@@ -320,29 +343,21 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
 
-  // Setup mode button
-//  pinMode(16, INPUT_PULLUP);
-//
-//  Serial.println("Selecting Wifi mode...");
-//  delay(2000);
-//  if (digitalRead(16) == LOW) {
-//    Serial.println("WIFI MODE: Acess Point");
-//    wifiMode = WIFI_MODE_AP;
-//  } else {
-//    Serial.println("WIFI MODE: Station");
-//    wifiMode = WIFI_MODE_STA;
-//  }
+  // Init Flash File System
+  if(!SPIFFS.begin(true)){
+    Serial.println("An Error has occurred while mounting SPIFFS");
+  } else{
+    Serial.println("SPIFFS mounted successfully");
+  }
 
   // Setup WiFi
-  if (wifiMode & WIFI_MODE_STA) {
-    // Connect wifi
-    if (!connectWifi()) {
-      Serial.println("Wifi connection timeout!");
-    } else {
-      Serial.print("Wifi connected, lives on IP: ");
-      Serial.println(WiFi.localIP());
-    }
+  if (connectWifi()) {
+    Serial.print("Wifi connected, lives on IP: ");
+    Serial.println(WiFi.localIP());
   } else {
+    Serial.println("Wifi connection timeout!");
+    Serial.println("Switch to Access Point mode!");
+
     // Setup access point
     if (!initAccessPointMode()) {
       Serial.println("Failed to init Access Point mode!");
@@ -352,13 +367,6 @@ void setup() {
       Serial.println(IP);
     }
   }
-
-  // Init Flash File System
-  if(!SPIFFS.begin(true)){
-    Serial.println("An Error has occurred while mounting SPIFFS");
-  } else{
-    Serial.println("SPIFFS mounted successfully");
-  }
   
   initCamera();
   setupLedFlash(LED_GPIO_NUM);
@@ -367,7 +375,11 @@ void setup() {
   startWebSocket();
 
   // List file in SPIFFS
-  FileOperation::listDir(SPIFFS, "/", 0);
+  FileOperation::listDir("/", 0);
+  delay(2000);
+  Serial.println("Public-wifi-config.txt : ");
+  Serial.println(FileOperation::readFile("/public-wifi-config.txt"));
+  delay(2000);
 }
 
 void loop() {

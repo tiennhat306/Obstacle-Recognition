@@ -1,13 +1,12 @@
-#include "FS.h"
 #include "SPIFFS.h"
 
 class FileOperation
 {
 public:
-  static void listDir(fs::FS &fs, const char * dirname, uint8_t levels){
+  static void listDir(const char * dirname, uint8_t levels){
     Serial.printf("Listing directory: %s\r\n", dirname);
 
-    File root = fs.open(dirname);
+    File root = SPIFFS.open(dirname);
     if(!root){
         Serial.println("- failed to open directory");
         return;
@@ -23,7 +22,7 @@ public:
           Serial.print("  DIR : ");
           Serial.println(file.name());
           if(levels){
-              listDir(fs, file.path(), levels -1);
+              listDir(file.path(), levels - 1);
           }
       } else {
           Serial.print("  FILE: ");
@@ -35,10 +34,10 @@ public:
     }
   }
 
-  static void readFile(fs::FS &fs, const char * path){
+  static void readFileToSerial(const char * path){
     Serial.printf("Reading file: %s\r\n", path);
 
-    File file = fs.open(path);
+    File file = SPIFFS.open(path);
     if(!file || file.isDirectory()){
         Serial.println("- failed to open file for reading");
         return;
@@ -51,10 +50,23 @@ public:
     file.close();
   }
 
-  static void writeFile(fs::FS &fs, const char * path, const char * message){
+  static String readFile(const char *path) {
+    // Đọc nội dung từ tệp và trả về dưới dạng String
+    File file = SPIFFS.open(path, "r");
+    if (!file) {
+        Serial.printf("Failed to open file \"%s\" for reading", path);
+        return "";
+    }
+
+    String content = file.readString();
+    file.close();
+    return content;
+  }
+
+  static void writeFile(const char * path, const char * message){
       Serial.printf("Writing file: %s\r\n", path);
   
-      File file = fs.open(path, FILE_WRITE);
+      File file = SPIFFS.open(path, FILE_WRITE);
       if(!file){
           Serial.println("- failed to open file for writing");
           return;
@@ -67,9 +79,9 @@ public:
       file.close();
   }
 
-  void deleteFile(fs::FS &fs, const char * path){
+  void deleteFile(const char * path){
     Serial.printf("Deleting file: %s\r\n", path);
-    if(fs.remove(path)){
+    if(SPIFFS.remove(path)){
         Serial.println("- file deleted");
     } else {
         Serial.println("- delete failed");

@@ -75,8 +75,6 @@ function onMessageWebSocket(event) {
 }
 
 
-
-
 document.addEventListener("DOMContentLoaded", async (e) => {
     let response = await fetch(rootPath + "/wifi-info", { method: "GET" });
     let json = await response.json();
@@ -84,5 +82,33 @@ document.addEventListener("DOMContentLoaded", async (e) => {
     console.log("GET /wifi-info");
     console.log(json);
 
-    document.getElementById("wifi-name").textContent = json.name;
+    document.getElementById("public-wifi-name").value = json.name;
+});
+
+document.getElementById("public-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    let form = e.target;
+
+    let data = {
+        name: document.getElementById("public-wifi-name").value,
+        password: document.getElementById("public-wifi-password").value
+    }
+
+    console.log("POST /change-public-wifi");
+    console.log("Body: ", data);
+
+    let response = await fetch(rootPath + "/change-public-wifi", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    });
+    
+    if (response.ok) {
+        alert("Save public wifi credential success");
+    } else {
+        alert("Save public wifi credential failed!");
+    }
 });
