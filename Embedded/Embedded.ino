@@ -8,7 +8,9 @@
 #include "ESPAsyncWebServer.h"
 #include "AsyncJson.h"
 #include "UltrasonicSensorReader.h"
-#include "FileOperation.h"
+#include "FileOperation.h" 
+#include "SoftwareSerial.h"
+#include "DFRobotDFPlayerMini.h"
 
 #define LED_LEDC_CHANNEL 2 //Using different ledc channel/timer than camera
 #define LED_BUILTIN 33
@@ -26,8 +28,8 @@ unsigned int wifiMode = WIFI_MODE_STA;  // WIFI_MODE_AP, WIFI_MODE_STA
 // Station config
 #define DEFAULT_SSID "5 AE Siêu Nhân"
 #define DEFAULT_PASSWORD "0364651600"
-
-const String apiEndpoint = "http://192.168.43.209:8000/detect/";
+const String apiEndpoint = "http://192.168.1.2:8888/detect/";
+// const String apiEndpoint = "http://localhost:8888/detect/";
 
 // Access Point config
 const char* localSsid = "MyESP32AP";
@@ -50,6 +52,9 @@ AsyncWebServer server(80);
 // Create a WebSocket object
 AsyncWebSocket ws("/ws");
 
+// Create df player
+SoftwareSerial serialDF(14,15);
+DFRobotDFPlayerMini player;
 
 void initCamera() {
   // Stores the camera configuration parameters
@@ -172,7 +177,42 @@ void showResult(String json){
     Serial.print(", quantity: ");
     Serial.println(quantity);
   }
+} 
+void playFolder(String jsonString) {
+  int count = 0, name = 0, length = 0;
+  DynamicJsonDocument doc(512);
+
+  DeserializationError error = deserializeJson(doc, jsonString);
+
+  if (error) return;
+
+  JsonObject data = doc["data"];
+  
+  for (JsonPair kv : data) {
+    if (kv.value().is<JsonObject>()) {
+      JsonObject obj = kv.value().as<JsonObject>();
+
+      for (JsonPair inner_kv : obj) {
+        String key = inner_kv.key().c_str();
+        int val = inner_kv.value().as<const int>(); 
+        if(key == "count") count = val;
+        if(key == "id") name = val;
+        if(key == "delay_time") length = val;
+      }
+    }
+  }
+  Serial.println(count);
+  Serial.println(name);
+  Serial.println(length);
+  if(count != 0 && name != 0 && length !=0){
+    Serial.println("phat nhac");
+    player.playFolder(1,count);
+    delay(3000);
+    player.playFolder(2,name);
+    delay(length*1500);
+  }
 }
+
 
 // Post image fb to apiEndpoint via form-data with key "image"
 int postHttpRequest(camera_fb_t* fb, const String* endpoint, HTTPClient* httpClient) {
@@ -214,6 +254,8 @@ void recognizeObstacle() {
       Serial.print("Image upload successful, server response: ");
       Serial.println(jsonResponse);
       showResult(jsonResponse);
+      Serial.println("------------");
+      playFolder(jsonResponse);
     } else {
       Serial.print("Image upload failed, error code: ");
       Serial.println(responseCode);
@@ -342,6 +384,16 @@ void setup() {
   // Turn on the built-in LED
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
+
+  // Set up for DF player mini
+  serialDF.begin(9600);
+  player.begin(serialDF);
+  player.volume(30);
+
+  // Set up for DF player mini
+  serialDF.begin(9600);
+  player.begin(serialDF);
+  player.volume(30);
 
   // Init Flash File System
   if(!SPIFFS.begin(true)){
