@@ -1,9 +1,11 @@
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 import numpy as np
-import cv2
+import csv
 import os
 import math
+import uuid
+import cv2
 from ultralytics import YOLO
 
 @api_view(['POST'])
@@ -13,9 +15,12 @@ def detectObjects(request, *args, **kwargs):
     image_np = np.array(bytearray(image_data.read()), dtype=np.uint8)
     image = cv2.imdecode(image_np, cv2.IMREAD_COLOR)
 
-    objects_detected = detect(image)
+    detected_objects = detect(image)
+    object_data = read_object_data_csv('recognition/mapper/object_mapper.csv')\
 
-    data = {'data': objects_detected}
+    processed_objects = process_detected_objects(detected_objects, object_data)
+
+    data = {'data': processed_objects}
     return JsonResponse(data, status=200)
 
 
@@ -48,15 +53,21 @@ def detectObjects(request, *args, **kwargs):
 #     return existed_objects
 
 def detect(img):
-    model = YOLO(r'D:\DUT\PBL5\best (8) (1).pt', 'v8')
+    model = YOLO('recognition/utils/best.pt', 'v8')
 
-    # Predict on the image
+    # UUID = uuid.uuid4()
+    # cv2.imwrite('recognition/static/detected_images/test' + str(uuid) + '.jpg', img)
+
     result = model(img)
 
-    # Get class names from the model
+    # save the result image
+    result_img = result.im
+    UUID = uuid.uuid4()
+    cv2.imwrite('recognition/static/detected_images/result' + str(uuid) + '.jpg', result_img)
+
     class_names = model.names
 
-    existed_objects = {}
+    detected_objects = {}
     for info in result:
         boxes = info.boxes
         for box in boxes:
@@ -65,9 +76,29 @@ def detect(img):
             class_idx = int(box.cls[0])
             class_name = class_names[class_idx]
             if confidence > 50:
-                if class_name in existed_objects:
-                    existed_objects[class_name] += 1
-                else:
-                    existed_objects[class_name] = 1
+                detected_objects[class_name] = detected_objects.get(class_name, 0) + 1
 
-    return existed_objects
+    return detected_objects
+
+
+def read_object_data_csv(filename):
+    objects = {}
+    with open(filename, 'r') as file:
+        reader = csv.reader(file)
+        next(reader, None)
+        for row in reader:
+            name, id, delay_time = row
+            objects[name] = {'id': id, 'delay_time': int(delay_time)}
+    return objects
+
+def process_detected_objects(objects, object_data):
+    processed_objects = {}
+    for name, count in objects.items():
+        if name in object_data:
+            processed_objects[name] = {
+                "count": count,
+                "id": object_data[name]["id"],
+                "delay_time": object_data[name]["delay_time"],
+            }
+
+    return processed_objects
