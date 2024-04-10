@@ -4,8 +4,10 @@ import numpy as np
 import csv
 import os
 import math
+
 import uuid
 import cv2
+
 from ultralytics import YOLO
 
 @api_view(['POST'])
@@ -27,15 +29,7 @@ def detectObjects(request, *args, **kwargs):
 def detect(img):
     model = YOLO('recognition/utils/best.pt', 'v8')
 
-    # UUID = uuid.uuid4()
-    # cv2.imwrite('recognition/static/detected_images/test' + str(uuid) + '.jpg', img)
-
     result = model(img)
-
-    # save the result image
-    result_img = result.im
-    UUID = uuid.uuid4()
-    cv2.imwrite('recognition/static/detected_images/result' + str(uuid) + '.jpg', result_img)
 
     class_names = model.names
 
