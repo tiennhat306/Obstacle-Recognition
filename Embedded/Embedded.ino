@@ -26,7 +26,7 @@
 unsigned int wifiMode = WIFI_MODE_STA;  // WIFI_MODE_AP, WIFI_MODE_STA
 
 // Station config
-#define DEFAULT_SSID "5 AE Siêu Nhân"
+#define DEFAULT_SSID "5 AE Siêu Nhânn"
 #define DEFAULT_PASSWORD "0364651600"
 const String apiEndpoint = "http://192.168.1.2:8888/detect/";
 // const String apiEndpoint = "http://localhost:8888/detect/";
@@ -43,7 +43,6 @@ const unsigned int requestInterval = 100; // (ms)
 // Timer
 unsigned int recognizeTimer = 0;
 
-
 UltrasonicSensorReader distanceReader(TRIG_PIN, ECHO_PIN);
 
 // Create AsyncWebServer object on port 80
@@ -51,6 +50,7 @@ AsyncWebServer server(80);
 
 // Create a WebSocket object
 AsyncWebSocket ws("/ws");
+
 
 // Create df player
 SoftwareSerial serialDF(14,15);
@@ -98,7 +98,7 @@ void initCamera() {
   }
 }
 
-bool getWifiCredential(String& ssid, String& password) {
+bool getSavedWifiCredential(String& ssid, String& password) {
   // Read file config to get ssid and password
   String jsonStr = FileOperation::readFile(PUBLIC_WIFI_CONF_FILE);
   JsonDocument doc;
@@ -108,8 +108,6 @@ bool getWifiCredential(String& ssid, String& password) {
     Serial.print("ConnectWifi(): deserializeJson() failed - ");
     Serial.println(error.c_str());
 
-    ssid = DEFAULT_SSID;
-    password = DEFAULT_PASSWORD;
     return false;
   } 
   
@@ -118,17 +116,9 @@ bool getWifiCredential(String& ssid, String& password) {
   return true;
 }
 
-bool connectWifi(int timeoutInMilis = 10000) {
+bool initWifiStationMode(String ssid, String password, int timeoutInMilis = 10000) {
   unsigned long timeStone = millis();
 
-  // Try reading wifi config file to get ssid and password
-  String ssid, password;
-  if (getWifiCredential(ssid, password)) {
-    Serial.print("Connecting to WiFi");
-  } else {
-    Serial.print("Try connecting wifi by using default credentials");
-  }
-  
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     if (millis() - timeStone > timeoutInMilis) 
@@ -141,6 +131,28 @@ bool connectWifi(int timeoutInMilis = 10000) {
 
   wifiMode = WIFI_MODE_STA;
   return true;
+}
+
+bool connectWifi(int timeoutInMilis = 8000) {
+  unsigned long timeStone = millis();
+
+  // Try reading wifi config file to get ssid and password
+  String ssid, password;
+  if (getSavedWifiCredential(ssid, password)) {
+    Serial.print("Try connecting to wifi using saved wifi credentials");
+    Serial.printf("- Wifi \"%s\"" , ssid);
+    if (initWifiStationMode(ssid, password, timeoutInMilis))
+      return true;
+    Serial.println("timeout!!!");
+  }
+  
+  Serial.print("Try connecting wifi by using default credentials");
+  Serial.printf("- Wifi \"%s\"" , DEFAULT_SSID);
+  if (initWifiStationMode(DEFAULT_SSID, DEFAULT_PASSWORD, timeoutInMilis)) 
+    return true;
+    
+  Serial.println("timeout!!!");
+  return false;
 }
 
 bool initAccessPointMode() {
@@ -354,7 +366,7 @@ void startWebServer() {
     JsonDocument wifiInfo;
     
     String ssid, password;
-    getWifiCredential(ssid, password);
+    getSavedWifiCredential(ssid, password);
     wifiInfo["name"] = ssid;
 
     serializeJson(wifiInfo, *response);
