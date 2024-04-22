@@ -26,14 +26,16 @@
 unsigned int wifiMode = WIFI_MODE_STA;  // WIFI_MODE_AP, WIFI_MODE_STA
 
 // Station config
-#define DEFAULT_SSID "5 AE Siêu Nhânn"
+#define DEFAULT_SSID "5 AE Siêu Nhân"
 #define DEFAULT_PASSWORD "0364651600"
 const String apiEndpoint = "http://192.168.1.2:8888/detect/";
 // const String apiEndpoint = "http://localhost:8888/detect/";
 
 // Access Point config
-const char* localSsid = "MyESP32AP";
-const char* localPassword = "12345678";
+#define LOCAL_SSID "Obstacle Recognizer"
+#define DEFAULT_LOCAL_PASSWORD "12345678"
+
+String localPassword = DEFAULT_LOCAL_PASSWORD;
 
 // WebSocket config
 uint8_t socketClientCount = 0; // Số lượng client đang kết nối
@@ -115,6 +117,14 @@ bool getSavedWifiCredential(String& ssid, String& password) {
   password = doc["password"].as<String>();
   return true;
 }
+ 
+bool getSavedLocalPassword(String& password) {
+  password = FileOperation::readFile(LOCAL_WIFI_CONF_FILE);
+  if (password != "") 
+    return true;
+    
+  return false;
+}
 
 bool initWifiStationMode(String ssid, String password, int timeoutInMilis = 10000) {
   unsigned long timeStone = millis();
@@ -157,7 +167,13 @@ bool connectWifi(int timeoutInMilis = 8000) {
 
 bool initAccessPointMode() {
   // Khởi tạo ESP32 trong chế độ AP
-  if (!WiFi.softAP(localSsid, localPassword)) return false;
+
+  // Try getting saved password
+  if (!getSavedLocalPassword(localPassword)) {
+    localPassword = DEFAULT_LOCAL_PASSWORD; // Set default if error occurs
+  }
+  
+  if (!WiFi.softAP(LOCAL_SSID, localPassword)) return false;
 
   // Cấu hình địa chỉ IP của Access Point (tùy chọn)
   IPAddress ip(192, 168, 1, 1);
@@ -359,7 +375,7 @@ void startWebServer() {
     request->send(SPIFFS, "/index.html", "text/html");
   });
 
-  server.on("/wifi-info", HTTP_GET, [](AsyncWebServerRequest *request){
+  server.on("/public-wifi-info", HTTP_GET, [](AsyncWebServerRequest *request){
     printRequestInfo(request);
     
     AsyncResponseStream *response = request->beginResponseStream("application/json");
@@ -373,11 +389,52 @@ void startWebServer() {
     request->send(response);
   });
 
+  server.on("/local-wifi-info", HTTP_GET, [](AsyncWebServerRequest *request){
+    printRequestInfo(request);
+    
+    AsyncResponseStream *response = request->beginResponseStream("application/json");
+    JsonDocument wifiInfo;
+    
+    String ssid, password;
+    getSavedWifiCredential(ssid, password);
+    wifiInfo["name"] = LOCAL_SSID;
+
+    serializeJson(wifiInfo, *response);
+    request->send(response);
+  });
+
   server.addHandler(new AsyncCallbackJsonWebHandler("/change-public-wifi", [](AsyncWebServerRequest *request, JsonVariant &json) {
     printRequestInfo(request);
     
     String jsonStr = json.as<String>();
     FileOperation::writeFile(PUBLIC_WIFI_CONF_FILE, jsonStr.c_str());
+    request->send(200);
+  }));
+
+  server.addHandler(new AsyncCallbackJsonWebHandler("/change-local-wifi", [](AsyncWebServerRequest *request, JsonVariant &json) {
+    printRequestInfo(request);
+    
+    String jsonStr = json.as<String>();
+    JsonDocument doc;
+    DeserializationError error = deserializeJson(doc, jsonStr);
+    if (error) {
+      Serial.print("deserializeJson() failed: ");
+      Serial.println(error.c_str());
+      request->send(400, "text/plain", "Failed to parse the request body - json!");
+      return;
+    }
+
+    String password = doc["password"];
+
+    if (password != localPassword) {
+      request->send(400, "text/plain", "The password isn't correct!");
+      return;
+    }
+    
+    String newPassword = doc["newPassword"];
+    localPassword = newPassword;
+    
+    FileOperation::writeFile(LOCAL_WIFI_CONF_FILE, newPassword.c_str());
     request->send(200);
   }));
   
@@ -427,23 +484,25 @@ void setup() {
       Serial.println("Failed to init Access Point mode!");
     } else {
       IPAddress IP = WiFi.softAPIP();
-      Serial.print("Access Point IP address: ");
+      Serial.printf("Access Point address: %s - %s", LOCAL_SSID, IP);
       Serial.println(IP);
     }
   }
   
   initCamera();
-  setupLedFlash(LED_GPIO_NUM);
+//  setupLedFlash(LED_GPIO_NUM);
 
   startWebServer();
   startWebSocket();
 
   // List file in SPIFFS
   FileOperation::listDir("/", 0);
-  delay(2000);
-  Serial.println("Public-wifi-config.txt : ");
-  Serial.println(FileOperation::readFile("/public-wifi-config.txt"));
-  delay(2000);
+  delay(1000);
+
+  FileOperation::readFileToSerial(PUBLIC_WIFI_CONF_FILE);
+  FileOperation::readFileToSerial(LOCAL_WIFI_CONF_FILE);
+  
+  delay(1000);
 }
 
 void loop() {

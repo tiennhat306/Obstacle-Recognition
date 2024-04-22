@@ -610,17 +610,17 @@
           <section class="toggle-section">
             <div class="input-group">
               <label for="start-x">Name</label>
-              <input name="wifiName" id="wifi-name" disabled value="ESP32WIFI">
+              <input name="wifiName" id="local-wifi-name" disabled>
             </div>
 
             <div class="input-group">
-              <label for="wifi-password">Password</label>
-              <input name="wifiPassword" id="wifi-password" required form="local-form">
+              <label for="local-wifi-password">Password</label>
+              <input id="local-wifi-password" required type="password" form="local-form">
             </div>
 
             <div class="input-group">
-              <label for="wifi-new-password">New password</label>
-              <input name="wifiNewPassword" id="wifi-new-password" required form="local-form">
+              <label for="local-wifi-new-password">New password</label>
+              <input id="local-wifi-new-password" required type="password" form="local-form">
             </div>
 
             <button style="margin: 13px auto;" form="local-form">Save</button>

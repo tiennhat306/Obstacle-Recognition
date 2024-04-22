@@ -76,19 +76,12 @@ function onMessageWebSocket(event) {
 
 
 document.addEventListener("DOMContentLoaded", async (e) => {
-    let response = await fetch(rootPath + "/wifi-info", { method: "GET" });
-    let json = await response.json();
-
-    console.log("GET /wifi-info");
-    console.log(json);
-
-    document.getElementById("public-wifi-name").value = json.name;
+    fillLocalWifiEle();
+    fillPublicWifiEle();
 });
 
 document.getElementById("public-form").addEventListener("submit", async (e) => {
     e.preventDefault();
-
-    let form = e.target;
 
     let data = {
         name: document.getElementById("public-wifi-name").value,
@@ -112,3 +105,50 @@ document.getElementById("public-form").addEventListener("submit", async (e) => {
         alert("Save public wifi credential failed!");
     }
 });
+
+document.getElementById("local-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    let data = {
+        password: document.getElementById("local-wifi-password").value,
+        newPassword: document.getElementById("local-wifi-new-password").value
+    }
+
+    console.log("POST /change-local-wifi");
+    console.log("Body: ", data);
+
+    let response = await fetch(rootPath + "/change-local-wifi", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    });
+    
+    if (response.ok) {
+        alert("Change local wifi password suscessfully!");
+    } else {
+        error = await response.text();
+        alert(error);
+    }
+});
+
+async function fillPublicWifiEle() {
+    let response = await fetch(rootPath + "/public-wifi-info", { method: "GET" });
+    let json = await response.json();
+
+    console.log("GET /wifi-info");
+    console.log(json);
+
+    document.getElementById("public-wifi-name").value = json.name;
+}
+
+async function fillLocalWifiEle() {
+    let response = await fetch(rootPath + "/local-wifi-info", { method: "GET" });
+    let json = await response.json();
+
+    console.log("GET /wifi-info");
+    console.log(json);
+
+    document.getElementById("local-wifi-name").value = json.name;
+}

@@ -4,15 +4,16 @@ class FileOperation
 {
 public:
   static void listDir(const char * dirname, uint8_t levels){
+    Serial.println("--------------------------");
     Serial.printf("Listing directory: %s\r\n", dirname);
 
     File root = SPIFFS.open(dirname);
     if(!root){
-        Serial.println("- failed to open directory");
+        Serial.println("\t- failed to open directory");
         return;
     }
     if(!root.isDirectory()){
-        Serial.println(" - not a directory");
+        Serial.println("\t- not a directory");
         return;
     }
 
@@ -35,19 +36,20 @@ public:
   }
 
   static void readFileToSerial(const char * path){
+    Serial.println("--------------------------");
     Serial.printf("Reading file: %s\r\n", path);
 
     File file = SPIFFS.open(path);
     if(!file || file.isDirectory()){
-        Serial.println("- failed to open file for reading");
+        Serial.println("\t failed to open file for reading!");
         return;
     }
 
-    Serial.println("- read from file:");
     while(file.available()){
         Serial.write(file.read());
     }
     file.close();
+    Serial.println();
   }
 
   static String readFile(const char *path) {
@@ -64,27 +66,29 @@ public:
   }
 
   static void writeFile(const char * path, const char * message){
+      Serial.println("--------------------------");
       Serial.printf("Writing file: %s\r\n", path);
   
       File file = SPIFFS.open(path, FILE_WRITE);
       if(!file){
-          Serial.println("- failed to open file for writing");
+          Serial.println("\t- failed to open file for writing");
           return;
       }
       if(file.print(message)){
-          Serial.println("- file written");
+          Serial.println("\t- file written");
       } else {
-          Serial.println("- write failed");
+          Serial.println("\t- write failed");
       }
       file.close();
   }
 
   void deleteFile(const char * path){
+    Serial.println("--------------------------");
     Serial.printf("Deleting file: %s\r\n", path);
     if(SPIFFS.remove(path)){
-        Serial.println("- file deleted");
+        Serial.println("\t- file deleted");
     } else {
-        Serial.println("- delete failed");
+        Serial.println("\t- delete failed");
     }
   }
 };
