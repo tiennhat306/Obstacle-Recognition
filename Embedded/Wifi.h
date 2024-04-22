@@ -9,7 +9,7 @@ class Wifi
 {
 public:
   static unsigned int wifiMode;  // WIFI_MODE_AP, WIFI_MODE_STA
-  static String localPassword ;
+  static String localPassword;
   
   // Configuration file name
   const static char* PUBLIC_WIFI_CONF_FILE;
@@ -123,6 +123,17 @@ public:
 
   static int status() {
     return WiFi.status();
+  }
+
+  static void init() {
+    // Load saved local password
+    String savedLocalPassword = FileOperation::readFile(LOCAL_WIFI_CONF_FILE);
+    
+    if (savedLocalPassword == "") {
+      localPassword = DEFAULT_LOCAL_PASSWORD;
+    } else {
+      localPassword = savedLocalPassword;
+    }
   }
 };
 #endif
