@@ -1,3 +1,6 @@
+#ifndef ULTRASONIC_SENSOR_READER
+#define ULTRASONIC_SENSOR_READER
+
 class UltrasonicSensorReader
 {
   private:
@@ -31,3 +34,4 @@ class UltrasonicSensorReader
       return distance;
     }
 };
+#endif

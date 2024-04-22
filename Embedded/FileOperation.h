@@ -1,3 +1,6 @@
+#ifndef FILE_OPERATION
+#define FILE_OPERATION
+
 #include "SPIFFS.h"
 
 class FileOperation
@@ -92,3 +95,4 @@ public:
     }
   }
 };
+#endif

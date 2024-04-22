@@ -1,19 +1,57 @@
+#ifndef WIFI
+#define WIFI
+
 #include <WiFi.h>
+#include "FileOperation.h"
+#include <ArduinoJson.h>
 
 class Wifi
 {
 public:
-  static bool connectWifi(int timeoutInMilis = 10000) {
+  static unsigned int wifiMode;  // WIFI_MODE_AP, WIFI_MODE_STA
+  static String localPassword ;
+  
+  // Configuration file name
+  const static char* PUBLIC_WIFI_CONF_FILE;
+  const static char* LOCAL_WIFI_CONF_FILE;
+
+  // Station config
+  const static char* DEFAULT_SSID;
+  const static char* DEFAULT_PASSWORD;
+
+  // Access Point config
+  const static char* LOCAL_SSID;
+  const static char* DEFAULT_LOCAL_PASSWORD;
+
+  static bool getSavedWifiCredential(String& ssid, String& password) {
+    // Read file config to get ssid and password
+    String jsonStr = FileOperation::readFile(PUBLIC_WIFI_CONF_FILE);
+    JsonDocument doc;
+    DeserializationError error = deserializeJson(doc, jsonStr);
+  
+    if (jsonStr == "" || error) {
+      Serial.print("ConnectWifi(): deserializeJson() failed - ");
+      Serial.println(error.c_str());
+  
+      return false;
+    } 
+    
+    ssid = doc["name"].as<String>();
+    password = doc["password"].as<String>();
+    return true;
+  }
+ 
+  static bool getSavedLocalPassword(String& password) {
+    password = FileOperation::readFile(LOCAL_WIFI_CONF_FILE);
+    if (password != "") 
+      return true;
+      
+    return false;
+  }
+
+  static bool initWifiStationMode(String ssid, String password, int timeoutInMilis = 10000) {
     unsigned long timeStone = millis();
   
-    // Try reading wifi config file to get ssid and password
-    String ssid, password;
-    if (getWifiCredential(ssid, password)) {
-      Serial.print("Connecting to WiFi");
-    } else {
-      Serial.print("Try connecting wifi by using default credentials");
-    }
-    
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED) {
       if (millis() - timeStone > timeoutInMilis) 
@@ -27,9 +65,38 @@ public:
     wifiMode = WIFI_MODE_STA;
     return true;
   }
+
+  static bool connectWifi(int timeoutInMilis = 8000) {
+    unsigned long timeStone = millis();
+  
+    // Try reading wifi config file to get ssid and password
+    String ssid, password;
+    if (getSavedWifiCredential(ssid, password)) {
+      Serial.print("Try connecting to wifi using saved wifi credentials");
+      Serial.printf("- Wifi \"%s\"" , ssid);
+      if (initWifiStationMode(ssid, password, timeoutInMilis))
+        return true;
+      Serial.println("timeout!!!");
+    }
+    
+    Serial.print("Try connecting wifi by using default credentials");
+    Serial.printf("- Wifi \"%s\"" , DEFAULT_SSID);
+    if (initWifiStationMode(DEFAULT_SSID, DEFAULT_PASSWORD, timeoutInMilis)) 
+      return true;
+      
+    Serial.println("timeout!!!");
+    return false;
+  }
+
   static bool initAccessPointMode() {
     // Khởi tạo ESP32 trong chế độ AP
-    if (!WiFi.softAP(localSsid, localPassword)) return false;
+  
+    // Try getting saved password
+    if (!getSavedLocalPassword(localPassword)) {
+      localPassword = DEFAULT_LOCAL_PASSWORD; // Set default if error occurs
+    }
+    
+    if (!WiFi.softAP(LOCAL_SSID, localPassword)) return false;
   
     // Cấu hình địa chỉ IP của Access Point (tùy chọn)
     IPAddress ip(192, 168, 1, 1);
@@ -41,47 +108,21 @@ public:
     
     return true;
   }
-  bool connectWifi(int timeoutInMilis = 10000) {
-    unsigned long timeStone = millis();
-  
-    // Try reading wifi config file to get ssid and password
-    String ssid, password;
-    if (getWifiCredential(ssid, password)) {
-      Serial.print("Connecting to WiFi");
-    } else {
-      Serial.print("Try connecting wifi by using default credentials");
-    }
-    
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
-      if (millis() - timeStone > timeoutInMilis) 
-        return false;
-      
-      Serial.print(".");
-      delay(1000);
-    }
-    Serial.println();
-  
-    wifiMode = WIFI_MODE_STA;
-    return true;
+
+  static IPAddress softAPIP() {
+    return WiFi.softAPIP();
   }
-  bool getWifiCredential(String& ssid, String& password) {
-    // Read file config to get ssid and password
-    String jsonStr = FileOperation::readFile(PUBLIC_WIFI_CONF_FILE);
-    JsonDocument doc;
-    DeserializationError error = deserializeJson(doc, jsonStr);
-  
-    if (jsonStr == "" || error) {
-      Serial.print("ConnectWifi(): deserializeJson() failed - ");
-      Serial.println(error.c_str());
-  
-      ssid = DEFAULT_SSID;
-      password = DEFAULT_PASSWORD;
-      return false;
-    } 
-    
-    ssid = doc["name"].as<String>();
-    password = doc["password"].as<String>();
-    return true;
+
+  static IPAddress localIP() {
+    return WiFi.localIP();
   }
-}
+
+  static bool isAccessMode() {
+    return wifiMode & WIFI_MODE_AP;
+  }
+
+  static int status() {
+    return WiFi.status();
+  }
+};
+#endif

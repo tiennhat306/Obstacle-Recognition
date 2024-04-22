@@ -8,9 +8,10 @@
 #include "ESPAsyncWebServer.h"
 #include "AsyncJson.h"
 #include "UltrasonicSensorReader.h"
-#include "FileOperation.h" 
+#include "FileOperation.h"
 #include "SoftwareSerial.h"
 #include "DFRobotDFPlayerMini.h"
+#include "Wifi.h"
 
 #define LED_LEDC_CHANNEL 2 //Using different ledc channel/timer than camera
 #define LED_BUILTIN 33
@@ -19,23 +20,8 @@
 #define TRIG_PIN 12 // PWM trigger
 #define ECHO_PIN 13 // PWM Output 0-25000US, Every 50US represent 1cm
 
-// Configuration file name
-#define PUBLIC_WIFI_CONF_FILE "/public-wifi-config.txt"
-#define LOCAL_WIFI_CONF_FILE "/local-wifi-config.txt"
-
-unsigned int wifiMode = WIFI_MODE_STA;  // WIFI_MODE_AP, WIFI_MODE_STA
-
-// Station config
-#define DEFAULT_SSID "5 AE Siêu Nhân"
-#define DEFAULT_PASSWORD "0364651600"
 const String apiEndpoint = "http://192.168.1.2:8888/detect/";
 // const String apiEndpoint = "http://localhost:8888/detect/";
-
-// Access Point config
-#define LOCAL_SSID "Obstacle Recognizer"
-#define DEFAULT_LOCAL_PASSWORD "12345678"
-
-String localPassword = DEFAULT_LOCAL_PASSWORD;
 
 // WebSocket config
 uint8_t socketClientCount = 0; // Số lượng client đang kết nối
@@ -98,92 +84,6 @@ void initCamera() {
     Serial.printf("Camera init failed with error 0x%x", err);
     return;
   }
-}
-
-bool getSavedWifiCredential(String& ssid, String& password) {
-  // Read file config to get ssid and password
-  String jsonStr = FileOperation::readFile(PUBLIC_WIFI_CONF_FILE);
-  JsonDocument doc;
-  DeserializationError error = deserializeJson(doc, jsonStr);
-
-  if (jsonStr == "" || error) {
-    Serial.print("ConnectWifi(): deserializeJson() failed - ");
-    Serial.println(error.c_str());
-
-    return false;
-  } 
-  
-  ssid = doc["name"].as<String>();
-  password = doc["password"].as<String>();
-  return true;
-}
- 
-bool getSavedLocalPassword(String& password) {
-  password = FileOperation::readFile(LOCAL_WIFI_CONF_FILE);
-  if (password != "") 
-    return true;
-    
-  return false;
-}
-
-bool initWifiStationMode(String ssid, String password, int timeoutInMilis = 10000) {
-  unsigned long timeStone = millis();
-
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    if (millis() - timeStone > timeoutInMilis) 
-      return false;
-    
-    Serial.print(".");
-    delay(1000);
-  }
-  Serial.println();
-
-  wifiMode = WIFI_MODE_STA;
-  return true;
-}
-
-bool connectWifi(int timeoutInMilis = 8000) {
-  unsigned long timeStone = millis();
-
-  // Try reading wifi config file to get ssid and password
-  String ssid, password;
-  if (getSavedWifiCredential(ssid, password)) {
-    Serial.print("Try connecting to wifi using saved wifi credentials");
-    Serial.printf("- Wifi \"%s\"" , ssid);
-    if (initWifiStationMode(ssid, password, timeoutInMilis))
-      return true;
-    Serial.println("timeout!!!");
-  }
-  
-  Serial.print("Try connecting wifi by using default credentials");
-  Serial.printf("- Wifi \"%s\"" , DEFAULT_SSID);
-  if (initWifiStationMode(DEFAULT_SSID, DEFAULT_PASSWORD, timeoutInMilis)) 
-    return true;
-    
-  Serial.println("timeout!!!");
-  return false;
-}
-
-bool initAccessPointMode() {
-  // Khởi tạo ESP32 trong chế độ AP
-
-  // Try getting saved password
-  if (!getSavedLocalPassword(localPassword)) {
-    localPassword = DEFAULT_LOCAL_PASSWORD; // Set default if error occurs
-  }
-  
-  if (!WiFi.softAP(LOCAL_SSID, localPassword)) return false;
-
-  // Cấu hình địa chỉ IP của Access Point (tùy chọn)
-  IPAddress ip(192, 168, 1, 1);
-  IPAddress gateway(192, 168, 1, 1);
-  IPAddress subnet(255, 255, 255, 0);
-  if (!WiFi.softAPConfig(ip, gateway, subnet)) return false;
-
-  wifiMode = WIFI_MODE_AP;
-  
-  return true;
 }
 
 void setupLedFlash(int pin) {
@@ -382,7 +282,7 @@ void startWebServer() {
     JsonDocument wifiInfo;
     
     String ssid, password;
-    getSavedWifiCredential(ssid, password);
+    Wifi::getSavedWifiCredential(ssid, password);
     wifiInfo["name"] = ssid;
 
     serializeJson(wifiInfo, *response);
@@ -394,10 +294,7 @@ void startWebServer() {
     
     AsyncResponseStream *response = request->beginResponseStream("application/json");
     JsonDocument wifiInfo;
-    
-    String ssid, password;
-    getSavedWifiCredential(ssid, password);
-    wifiInfo["name"] = LOCAL_SSID;
+    wifiInfo["name"] = Wifi::LOCAL_SSID;
 
     serializeJson(wifiInfo, *response);
     request->send(response);
@@ -407,7 +304,7 @@ void startWebServer() {
     printRequestInfo(request);
     
     String jsonStr = json.as<String>();
-    FileOperation::writeFile(PUBLIC_WIFI_CONF_FILE, jsonStr.c_str());
+    FileOperation::writeFile(Wifi::PUBLIC_WIFI_CONF_FILE, jsonStr.c_str());
     request->send(200);
   }));
 
@@ -426,15 +323,15 @@ void startWebServer() {
 
     String password = doc["password"];
 
-    if (password != localPassword) {
+    if (password != Wifi::localPassword) {
       request->send(400, "text/plain", "The password isn't correct!");
       return;
     }
     
     String newPassword = doc["newPassword"];
-    localPassword = newPassword;
+    Wifi::localPassword = newPassword;
     
-    FileOperation::writeFile(LOCAL_WIFI_CONF_FILE, newPassword.c_str());
+    FileOperation::writeFile(Wifi::LOCAL_WIFI_CONF_FILE, newPassword.c_str());
     request->send(200);
   }));
   
@@ -472,19 +369,19 @@ void setup() {
   }
 
   // Setup WiFi
-  if (connectWifi()) {
+  if (Wifi::connectWifi()) {
     Serial.print("Wifi connected, lives on IP: ");
-    Serial.println(WiFi.localIP());
+    Serial.println(Wifi::localIP());
   } else {
     Serial.println("Wifi connection timeout!");
     Serial.println("Switch to Access Point mode!");
 
     // Setup access point
-    if (!initAccessPointMode()) {
+    if (!Wifi::initAccessPointMode()) {
       Serial.println("Failed to init Access Point mode!");
     } else {
-      IPAddress IP = WiFi.softAPIP();
-      Serial.printf("Access Point address: %s - %s", LOCAL_SSID, IP);
+      IPAddress IP = Wifi::softAPIP();
+      Serial.printf("Access Point address: %s - ", Wifi::LOCAL_SSID);
       Serial.println(IP);
     }
   }
@@ -499,14 +396,14 @@ void setup() {
   FileOperation::listDir("/", 0);
   delay(1000);
 
-  FileOperation::readFileToSerial(PUBLIC_WIFI_CONF_FILE);
-  FileOperation::readFileToSerial(LOCAL_WIFI_CONF_FILE);
+  FileOperation::readFileToSerial(Wifi::PUBLIC_WIFI_CONF_FILE);
+  FileOperation::readFileToSerial(Wifi::LOCAL_WIFI_CONF_FILE);
   
   delay(1000);
 }
 
 void loop() {
-  if (wifiMode & WIFI_MODE_AP) {
+  if (Wifi::isAccessMode()) {
     delay(10000);
     return;
   }
