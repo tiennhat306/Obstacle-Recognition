@@ -11,6 +11,7 @@
 #include "SoftwareSerial.h"
 #include "DFRobotDFPlayerMini.h"
 #include "Wifi.h"
+#include "GpsReader.h"
 
 #define LED_LEDC_CHANNEL 2 //Using different ledc channel/timer than camera
 #define LED_BUILTIN 33
@@ -30,6 +31,9 @@ UltrasonicSensorReader distanceReader(TRIG_PIN, ECHO_PIN);
 // Create df player
 SoftwareSerial serialDF(14,15);
 DFRobotDFPlayerMini player;
+
+// GPS Reader instance
+GpsReader gpsReader(2, 16);
 
 void initCamera() {
   // Stores the camera configuration parameters
@@ -263,6 +267,10 @@ void loop() {
       recognizeTimer = millis();
     }
   }
-  
+
+  double lat = -1, lng = -1;
+  if (gpsReader.getLocation(lat, lng)) {
+    Serial.printf("Location : %lf, %lf", lat, lng);
+  }
   delay(200);
 }

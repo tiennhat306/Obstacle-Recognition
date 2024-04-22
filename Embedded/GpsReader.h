@@ -1,3 +1,6 @@
+#ifndef GPS_READER
+#define GPS_READER
+
 #include <TinyGPSPlus.h>
 #include <SoftwareSerial.h> 
 class GpsReader{
@@ -20,3 +23,4 @@ class GpsReader{
       return false;
     } 
 };
+#endif
