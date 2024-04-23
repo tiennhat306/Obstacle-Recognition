@@ -11,16 +11,16 @@
 #include "SoftwareSerial.h"
 #include "DFRobotDFPlayerMini.h"
 #include "Wifi.h"
-#include "GpsReader.h"
+#include <TinyGPSPlus.h>
 
 #define LED_LEDC_CHANNEL 2 //Using different ledc channel/timer than camera
 #define LED_BUILTIN 33
 
-// Pins for ultrasonic sensor
-#define TRIG_PIN 12 // PWM trigger
-#define ECHO_PIN 13 // PWM Output 0-25000US, Every 50US represent 1cm
+// Pins for ultrasonic sensor 
+#define TRIG_PIN 4 // PWM trigger
+#define ECHO_PIN 2 // PWM Output 0-25000US, Every 50US represent 1cm 
 
-const String apiEndpoint = "http://192.168.1.2:8888/detect/";
+const String apiEndpoint = "http://192.168.1.9:8888/detect/";
 // const String apiEndpoint = "http://localhost:8888/detect/";
 
 // Timer
@@ -33,7 +33,8 @@ SoftwareSerial serialDF(14,15);
 DFRobotDFPlayerMini player;
 
 // GPS Reader instance
-GpsReader gpsReader(2, 16);
+SoftwareSerial serialGPS(12,13);
+TinyGPSPlus gps;
 
 void initCamera() {
   // Stores the camera configuration parameters
@@ -119,16 +120,22 @@ void playFolder(String jsonString) {
         if(key == "delay_time") length = val;
       }
     }
-  }
+  } 
   Serial.println(count);
   Serial.println(name);
   Serial.println(length);
+  // if(count != 0 && name != 0 && length !=0){
+  //   Serial.println("phat nhac");
+  //   player.playFolder(1,count);
+  //   delay(3000);
+  //   player.playFolder(2,name);
+  //   delay(length*1500);
+  // }
   if(count != 0 && name != 0 && length !=0){
-    Serial.println("phat nhac");
-    player.playFolder(1,count);
-    delay(3000);
-    player.playFolder(2,name);
-    delay(length*1500);
+    Serial.println("phat nhac"); 
+    player.play(1);
+    // player.play(2);
+    delay(1200); 
   }
 }
 
@@ -199,12 +206,10 @@ void setup() {
   // Set up for DF player mini
   serialDF.begin(9600);
   player.begin(serialDF);
-  player.volume(30);
+  player.volume(30); 
 
-  // Set up for DF player mini
-  serialDF.begin(9600);
-  player.begin(serialDF);
-  player.volume(30);
+  // Set up for Neo-6m
+  serialGPS.begin(9600);
 
   // Init Flash File System
   if(!SPIFFS.begin(true)){
@@ -254,6 +259,15 @@ void loop() {
     delay(10000);
     return;
   }
+  while (serialGPS.available()>0) {
+    gps.encode(serialGPS.read());  
+    // if(gps.location.isUpdated()){
+        Serial.print("Lat: ");
+        Serial.println(gps.location.lat(),6);
+        Serial.print("Long: ");
+        Serial.println(gps.location.lng(),6);  
+    // }
+  }
 
   int disFromObs = distanceReader.getDistanceFromObstacle();
   Serial.print("Distance from obstacle : ");
@@ -266,11 +280,7 @@ void loop() {
       recognizeObstacle();
       recognizeTimer = millis();
     }
-  }
-
-  double lat = -1, lng = -1;
-  if (gpsReader.getLocation(lat, lng)) {
-    Serial.printf("Location : %lf, %lf", lat, lng);
-  }
+  } 
+  Serial.println("---------------");  
   delay(200);
 }
