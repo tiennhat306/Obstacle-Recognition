@@ -1,3 +1,14 @@
 name,id,delay_time
-Table,0001,2
-Laptop,0002,2
+Bed,0001,2000
+Bottle,0002,2000
+Car,0003,2000
+Cat,0004,2000
+Chair,0005,2000
+Dog,0006,2000
+Door,0007,2000
+Laptop,0008,2000
+People,0009,2000
+Pothole,0010,2000
+Smartphone,0011,2000
+Staircase,0012,2000
+Table,0013,2000
