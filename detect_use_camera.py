@@ -4,7 +4,7 @@ import cv2
 import math
 
 # Load the YOLO model
-model = YOLO(r"C:\Users\ngmv1\OneDrive\Máy tính\PBL5\Obstacle-Recognition\best (10).pt", "v8")
+model = YOLO(r"C:\Users\ngmv1\OneDrive\Máy tính\PBL5\Obstacle-Recognition\recognition\utils\best_clearML.pt", "v8")
 
 # Open webcam
 cap = cv2.VideoCapture(2)
@@ -38,7 +38,7 @@ while True:
             confidence = math.ceil(confidence * 100)
             class_idx = int(box.cls[0])
             class_name = class_names[class_idx]
-            if confidence > 50:
+            if confidence > 30:
                 x1, y1, x2, y2 = box.xyxy[0].int().tolist()
                 cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 5)
                 cv2.putText(frame, f'{class_name} {confidence}%', (x1 + 8, y1 + 100),
