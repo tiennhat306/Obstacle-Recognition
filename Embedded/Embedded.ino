@@ -245,15 +245,17 @@ void setup() {
   
   delay(1000);
 }
-double sendLat = 0;
-double sendLng = 0;
+
 void loop() {
-  double tmpLat = 0;
-  double tmpLng = 0;
   if (Wifi::isAccessMode()) {
     delay(10000);
     return;
   }
+
+  /// GPS logic
+  double tmpLat = 0;
+  double tmpLng = 0;
+
   while (serialGPS.available()>0) {
     gps.encode(serialGPS.read());  
     // if(gps.location.isUpdated()){
@@ -265,18 +267,20 @@ void loop() {
     tmpLng =  gps.location.lng();
     // }
   }
-  if (tmpLat != sendLat || tmpLng != sendLng){
+
+  if (tmpLat != 0 && tmpLng != 0 && LocationUploader::isUpdated(tmpLat, tmpLng)) {
     Serial.println("Send GPS");
-    sendLat = tmpLat;
-    sendLng = tmpLng;
+    
     Serial.print("Lat: ");
-    Serial.print(sendLat);
+    Serial.print(tmpLat);
     Serial.print(", Long: "); 
-    Serial.println(sendLng); 
-    // LocationUploader::upload(sendLat,sendLng);
+    Serial.println(tmpLng);
+    LocationUploader::upload(tmpLat, tmpLng);
+  } else {
+    Serial.println("GPS-Location is not updated");
   }
 
-
+  /// Recognization obstacle logic
   int disFromObs = distanceReader.getDistanceFromObstacle();
   Serial.print("Distance from obstacle : ");
   Serial.print(disFromObs);
