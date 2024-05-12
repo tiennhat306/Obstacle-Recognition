@@ -11,6 +11,8 @@ const char* Wifi::LOCAL_WIFI_CONF_FILE = "/local-wifi-config.txt";
 // const char* Wifi::DEFAULT_PASSWORD = "0364651600";
 const char* Wifi::DEFAULT_SSID = "Toto";
 const char* Wifi::DEFAULT_PASSWORD = "phuocduy03";
+// const char* Wifi::DEFAULT_SSID = "Redmi 8";
+// const char* Wifi::DEFAULT_PASSWORD = "phuocduy";
 
 // Access Point config
 const char* Wifi::LOCAL_SSID = "Obstacle Recognizer";

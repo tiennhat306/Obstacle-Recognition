@@ -1,3 +1,4 @@
+#include "HardwareSerial.h"
 #ifndef LOCATION_UPLOADER
 #define LOCATION_UPLOADER
 
@@ -13,21 +14,23 @@ private:
 public:
   static bool upload(double lat, double lng) {
     // Create the request
-    httpClient->begin(UPLOAD_ENDPOINT + DEVICE_KEY);
-    httpClient->addHeader("Content-Type", "application/json");
-    
-    String requestBody = "{ \"latitude\": " + String(lat) + ", \"longitude\": " + String(lng) + "}";
+    HTTPClient httpClient;
+    httpClient.begin(String(UPLOAD_ENDPOINT) + String(DEVICE_KEY));
+    httpClient.addHeader("Content-Type", "application/json");
 
+    String requestBody = String("{ \"latitude\": ") + String(lat,6) + ", \"longitude\": " + String(lng,6) + "}";
+    Serial.print("Send GPS");
+    Serial.println(requestBody);
     // PUT the request
-    int responseCode = httpClient->PUT(requestBody);
-    http.end();
+    int responseCode = httpClient.PUT(requestBody);
+    httpClient.end();
     
-    if (httpResponseCode > 0) {
+    if (responseCode > 0) {
       return true;
     }
     
     Serial.print("Error on LocationUploader request: ");
-    Serial.println(httpResponseCode);
+    Serial.println(responseCode);
     return false;
   }
 };

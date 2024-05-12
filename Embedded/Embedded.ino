@@ -12,6 +12,7 @@
 #include "DFRobotDFPlayerMini.h"
 #include "Wifi.h"
 #include <TinyGPSPlus.h>
+#include "LocationUploader.h"
 
 #define LED_LEDC_CHANNEL 2 //Using different ledc channel/timer than camera
 #define LED_BUILTIN 33
@@ -20,7 +21,8 @@
 #define TRIG_PIN 4 // PWM trigger
 #define ECHO_PIN 2 // PWM Output 0-25000US, Every 50US represent 1cm 
 
-const String apiEndpoint = "http://192.168.1.9:8888/detect/";
+const String apiEndpoint = "http://192.168.1.22:8888/detect/";
+// const String apiEndpoint = "http://192.168.43.69:8888/detect/";
 // const String apiEndpoint = "http://localhost:8888/detect/";
 
 // Timer
@@ -115,28 +117,18 @@ void playFolder(String jsonString) {
       for (JsonPair inner_kv : obj) {
         String key = inner_kv.key().c_str();
         int val = inner_kv.value().as<const int>(); 
-        if(key == "count") count = val;
-        if(key == "id") name = val;
+        if(key == "count") count = val; 
         if(key == "delay_time") length = val;
+      }
+      Serial.println(count); 
+      Serial.println(length);
+      if(count != 0 && length !=0){
+        Serial.println("phat nhac"); 
+        player.play(count);
+        delay(length); 
       }
     }
   } 
-  Serial.println(count);
-  Serial.println(name);
-  Serial.println(length);
-  // if(count != 0 && name != 0 && length !=0){
-  //   Serial.println("phat nhac");
-  //   player.playFolder(1,count);
-  //   delay(3000);
-  //   player.playFolder(2,name);
-  //   delay(length*1500);
-  // }
-  if(count != 0 && name != 0 && length !=0){
-    Serial.println("phat nhac"); 
-    player.play(1);
-    // player.play(2);
-    delay(1200); 
-  }
 }
 
 
@@ -253,8 +245,11 @@ void setup() {
   
   delay(1000);
 }
-
+double sendLat = 0;
+double sendLng = 0;
 void loop() {
+  double tmpLat = 0;
+  double tmpLng = 0;
   if (Wifi::isAccessMode()) {
     delay(10000);
     return;
@@ -262,12 +257,25 @@ void loop() {
   while (serialGPS.available()>0) {
     gps.encode(serialGPS.read());  
     // if(gps.location.isUpdated()){
-        Serial.print("Lat: ");
-        Serial.println(gps.location.lat(),6);
-        Serial.print("Long: ");
-        Serial.println(gps.location.lng(),6);  
+    // Serial.print("Lat: ");
+    // Serial.print(gps.location.lat(),6);
+    // Serial.print(", Long: "); 
+    // Serial.println(gps.location.lng(),6); 
+    tmpLat =  gps.location.lat();
+    tmpLng =  gps.location.lng();
     // }
   }
+  if (tmpLat != sendLat || tmpLng != sendLng){
+    Serial.println("Send GPS");
+    sendLat = tmpLat;
+    sendLng = tmpLng;
+    Serial.print("Lat: ");
+    Serial.print(sendLat);
+    Serial.print(", Long: "); 
+    Serial.println(sendLng); 
+    // LocationUploader::upload(sendLat,sendLng);
+  }
+
 
   int disFromObs = distanceReader.getDistanceFromObstacle();
   Serial.print("Distance from obstacle : ");
