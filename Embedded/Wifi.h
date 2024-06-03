@@ -8,7 +8,7 @@
 class Wifi
 {
 public:
-  static unsigned int wifiMode;  // WIFI_MODE_AP, WIFI_MODE_STA
+  static unsigned int wifiMode;  // WIFI_MODE_AP, WIFI_MODE_STA, WIFI_AP_STA
   static String localPassword;
   
   // Configuration file name
@@ -62,7 +62,7 @@ public:
     }
     Serial.println();
   
-    wifiMode = WIFI_MODE_STA;
+    wifiMode |= WIFI_MODE_STA;
     return true;
   }
 
@@ -89,14 +89,12 @@ public:
   }
 
   static bool initAccessPointMode() {
-    // Khởi tạo ESP32 trong chế độ AP
-  
     // Try getting saved password
     if (!getSavedLocalPassword(localPassword)) {
       localPassword = DEFAULT_LOCAL_PASSWORD; // Set default if error occurs
     }
     
-    if (!WiFi.softAP(LOCAL_SSID, localPassword)) return false;
+    if (!WiFi.softAP(LOCAL_SSID, localPassword, 1, 0, 4)) return false;
   
     // Cấu hình địa chỉ IP của Access Point (tùy chọn)
     IPAddress ip(192, 168, 1, 1);
@@ -104,7 +102,7 @@ public:
     IPAddress subnet(255, 255, 255, 0);
     if (!WiFi.softAPConfig(ip, gateway, subnet)) return false;
   
-    wifiMode = WIFI_MODE_AP;
+    wifiMode |= WIFI_MODE_AP;
     
     return true;
   }
@@ -121,8 +119,16 @@ public:
     return wifiMode & WIFI_MODE_AP;
   }
 
+  static bool isStationMode() {
+    return wifiMode & WIFI_MODE_STA;
+  }
+
   static int status() {
     return WiFi.status();
+  }
+
+  static bool isConnected() {
+    return WiFi.status() == WL_CONNECTED;
   }
 
   static void init() {
@@ -134,6 +140,9 @@ public:
     } else {
       localPassword = savedLocalPassword;
     }
+
+    // Set wifi mode
+    WiFi.mode(WIFI_MODE_APSTA);
   }
 };
 #endif

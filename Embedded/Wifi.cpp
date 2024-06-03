@@ -1,6 +1,6 @@
 #include "Wifi.h"
 
-unsigned int Wifi::wifiMode = WIFI_MODE_STA;  // WIFI_MODE_AP, WIFI_MODE_STA
+unsigned int Wifi::wifiMode = WIFI_MODE_NULL;  // WIFI_MODE_AP, WIFI_MODE_STA
 
 // Configuration file name
 const char* Wifi::PUBLIC_WIFI_CONF_FILE = "/public-wifi-config.txt";

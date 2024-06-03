@@ -78,6 +78,10 @@ void initCamera() {
     Serial.printf("Camera init failed with error 0x%x", err);
     return;
   }
+
+  sensor_t * s = esp_camera_sensor_get();
+  // reverse the image if you need to
+  s->set_vflip(s, 1);
 }
 
 void setupLedFlash(int pin) {
@@ -214,21 +218,21 @@ void setup() {
   // Setup WiFi
   Wifi::init();
   
+  // Setup station mode
   if (Wifi::connectWifi()) {
     Serial.print("Wifi connected, lives on IP: ");
     Serial.println(Wifi::localIP());
   } else {
     Serial.println("Wifi connection timeout!");
-    Serial.println("Switch to Access Point mode!");
+  }
 
-    // Setup access point
-    if (!Wifi::initAccessPointMode()) {
-      Serial.println("Failed to init Access Point mode!");
-    } else {
-      IPAddress IP = Wifi::softAPIP();
-      Serial.printf("Access Point address: %s - ", Wifi::LOCAL_SSID);
-      Serial.println(IP);
-    }
+  // Setup access point mode
+  if (!Wifi::initAccessPointMode()) {
+    Serial.println("Failed to init Access Point mode!");
+  } else {
+    IPAddress IP = Wifi::softAPIP();
+    Serial.printf("Access Point address: %s - ", Wifi::LOCAL_SSID);
+    Serial.println(IP);
   }
   
   initCamera();
@@ -242,12 +246,11 @@ void setup() {
 
   FileOperation::readFileToSerial(Wifi::PUBLIC_WIFI_CONF_FILE);
   FileOperation::readFileToSerial(Wifi::LOCAL_WIFI_CONF_FILE);
-  
   delay(1000);
 }
 
 void loop() {
-  if (Wifi::isAccessMode()) {
+  if (Wifi::isConnected()) {
     delay(10000);
     return;
   }
