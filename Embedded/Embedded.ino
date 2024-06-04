@@ -21,7 +21,7 @@
 #define TRIG_PIN 4 // PWM trigger
 #define ECHO_PIN 2 // PWM Output 0-25000US, Every 50US represent 1cm 
 
-const String apiEndpoint = "http://192.168.1.22:8888/detect/";
+const String apiEndpoint = "http://192.168.43.69:8888/detect/";
 // const String apiEndpoint = "http://192.168.43.69:8888/detect/";
 // const String apiEndpoint = "http://localhost:8888/detect/";
 
@@ -112,8 +112,14 @@ void playFolder(String jsonString) {
 
   if (error) return;
 
-  JsonObject data = doc["data"];
-  
+  JsonObject data = doc["data"];  
+  int numberOfObject = 0;
+  int tmp = 0;
+  for (JsonPair kv : data) {
+    if (kv.value().is<JsonObject>()) {
+      numberOfObject += 1;
+    }
+  }
   for (JsonPair kv : data) {
     if (kv.value().is<JsonObject>()) {
       JsonObject obj = kv.value().as<JsonObject>();
@@ -129,10 +135,14 @@ void playFolder(String jsonString) {
       if(count != 0 && length !=0){
         Serial.println("phat nhac"); 
         player.play(count);
-        delay(length); 
+        if(tmp<numberOfObject-1){
+          delay(length); 
+        }
       }
     }
+    tmp++;
   } 
+  
 }
 
 
@@ -250,7 +260,7 @@ void setup() {
 }
 
 void loop() {
-  if (Wifi::isConnected()) {
+  if (!Wifi::isConnected()) {
     delay(10000);
     return;
   }
@@ -292,8 +302,8 @@ void loop() {
   if (millis() - recognizeTimer > 1000) {
     if (disFromObs < 100) {
       Serial.println("Start recognization");
-      recognizeObstacle();
       recognizeTimer = millis();
+      recognizeObstacle();
     }
   } 
   Serial.println("---------------");  

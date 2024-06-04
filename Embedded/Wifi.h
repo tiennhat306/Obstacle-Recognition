@@ -73,7 +73,8 @@ public:
     String ssid, password;
     if (getSavedWifiCredential(ssid, password)) {
       Serial.print("Try connecting to wifi using saved wifi credentials");
-      Serial.printf("- Wifi \"%s\"" , ssid);
+      Serial.print("- Wifi ");
+      Serial.println(ssid);
       if (initWifiStationMode(ssid, password, timeoutInMilis))
         return true;
       Serial.println("timeout!!!");
