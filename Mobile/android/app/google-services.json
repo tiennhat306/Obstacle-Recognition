@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "237996248374",
+    "project_id": "visionaid-dut210",
+    "storage_bucket": "visionaid-dut210.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:237996248374:android:c9054f3f4ec777c5127797",
+        "android_client_info": {
+          "package_name": "com.vision_aid.vision_aid"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDzod9uWPnqQm2q4xeZ4rMmx-ZlQVwneB8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
