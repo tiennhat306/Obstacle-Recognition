@@ -1,10 +1,10 @@
-#include "HardwareSerial.h"
 #ifndef LOCATION_UPLOADER
 #define LOCATION_UPLOADER
 
 #define UPLOAD_ENDPOINT "https://us-central1-visionaid-dut210.cloudfunctions.net/app/api/update-location/"
 #define DEVICE_KEY "Device1234"
 
+//#include "HardwareSerial.h"
 #include <HTTPClient.h>
 
 class LocationUploader

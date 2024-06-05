@@ -14,6 +14,12 @@
 #include <TinyGPSPlus.h>
 #include "LocationUploader.h"
 
+#define UPLOAD_BY_WEBSOCKET // comment it if want to use Http API instead
+
+#ifdef UPLOAD_BY_WEBSOCKET
+#include "ImageRecognizer.h"
+#endif
+
 #define LED_LEDC_CHANNEL 2 //Using different ledc channel/timer than camera
 #define LED_BUILTIN 33
 
@@ -24,6 +30,10 @@
 const String apiEndpoint = "http://192.168.1.22:8888/detect/";
 // const String apiEndpoint = "http://192.168.43.69:8888/detect/";
 // const String apiEndpoint = "http://localhost:8888/detect/";
+
+#ifdef UPLOAD_BY_WEBSOCKET
+const String websocketServerAddress = "ws://192.168.1.22";
+#endif
 
 // Timer
 unsigned int recognizeTimer = 0;
@@ -37,6 +47,11 @@ DFRobotDFPlayerMini player;
 // GPS Reader instance
 SoftwareSerial serialGPS(12,13);
 TinyGPSPlus gps;
+
+#ifdef UPLOAD_BY_WEBSOCKET
+// Recognizer by using webocket
+ImageRecognizer websocketRecognizer;
+#endif
 
 void initCamera() {
   // Stores the camera configuration parameters
@@ -168,6 +183,14 @@ void recognizeObstacle() {
   if (Wifi::status() == WL_CONNECTED) {
     Serial.println("Sending request to server");
 
+#ifdef UPLOAD_BY_WEBSOCKET
+    bool result = websocketRecognizer.sendImage(fb);
+    if (result) {
+      Serial.println("Send image to websocket server successful");
+    } else {
+      Serial.println("ERROR: Failed to send image to websocket server!");
+    }
+#else
     HTTPClient httpClient;
     int responseCode = postHttpRequest(fb, &apiEndpoint, &httpClient);
     
@@ -186,6 +209,7 @@ void recognizeObstacle() {
     }
 
     httpClient.end();
+#endif
   } else {
     Serial.println("WiFi not connected, image upload skipped");
   }
@@ -240,9 +264,13 @@ void setup() {
 
   WebServer::start();
 
+#ifdef UPLOAD_BY_WEBSOCKET
+  websocketRecognizer.begin(websocketServerAddress, 80);
+  websocketRecognizer.addHandler(playFolder);
+#endif
+
   // List file in SPIFFS
   FileOperation::listDir("/", 0);
-  delay(1000);
 
   FileOperation::readFileToSerial(Wifi::PUBLIC_WIFI_CONF_FILE);
   FileOperation::readFileToSerial(Wifi::LOCAL_WIFI_CONF_FILE);
@@ -250,11 +278,14 @@ void setup() {
 }
 
 void loop() {
-  if (Wifi::isConnected()) {
+  if (!Wifi::isConnected()) {
     delay(10000);
     return;
   }
-
+#ifdef UPLOAD_BY_WEBSOCKET
+  websocketRecognizer.loop();
+#endif
+  
   /// GPS logic
   double tmpLat = 0;
   double tmpLng = 0;
