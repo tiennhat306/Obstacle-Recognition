@@ -5,12 +5,10 @@ class ResponseLogin {
   final bool resp;
   final String msg;
   final UserToken user;
-  final String token;
 
   ResponseLogin({
     required this.resp,
     required this.msg,
-    required this.token,
     required this.user,
   });
 
@@ -18,7 +16,6 @@ class ResponseLogin {
         resp: json["resp"],
         msg: json["msg"],
         user: UserToken.fromJson(json["user"] ?? {}),
-        token: json["token"] ?? '',
       );
 }
 
@@ -29,7 +26,6 @@ class UserToken {
   final String email;
   final String phone;
   ListAddress? address;
-  final String notificationToken;
 
   UserToken(
       {required this.uid,
@@ -37,8 +33,7 @@ class UserToken {
       required this.phone,
       required this.image,
       required this.email,
-      required this.address,
-      required this.notificationToken});
+      required this.address});
 
   factory UserToken.fromJson(Map<String, dynamic> json) => UserToken(
       uid: json["uid"] ?? 0,
@@ -48,6 +43,5 @@ class UserToken {
       email: json["email"] ?? '',
       address: json["address"] != null
           ? ListAddress.fromJson(json["address"] as Map<String, dynamic>)
-          : null,
-      notificationToken: json["notification_token"] ?? '');
+          : null);
 }

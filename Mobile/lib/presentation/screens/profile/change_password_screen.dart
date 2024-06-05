@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vision_aid/domain/bloc/blocs.dart';
 import 'package:vision_aid/presentation/components/components.dart';
 import 'package:vision_aid/presentation/helpers/helpers.dart';
-import 'package:vision_aid/presentation/themes/colors_frave.dart';
+import 'package:vision_aid/presentation/themes/colors.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
 

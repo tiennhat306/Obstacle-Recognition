@@ -33,8 +33,7 @@ class DeviceServices {
     if (querySnapshot.docs.isNotEmpty) {
       return List<Device>.from(querySnapshot.docs.map((doc) => Device(
           id: doc.id,
-          username: doc['username'],
-          street: doc['location']['street'])));
+          username: doc['username'],)));
     } else {
       return [];
     }
@@ -63,20 +62,17 @@ class DeviceServices {
 
     final response = await http.put(
         Uri.parse('${Environment.endpointBase}/change-public-wifi'),
-        headers: {'Accept': 'application/json', 'xx-token': token!},
-        body: {'deviceKey': deviceKey, 'name': name, 'password': password});
+        // headers: {'Content-Type': 'application/json'},
+        // add headers content type
+        headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
 
+
+        // body: {'deviceKey': deviceKey, 'name': name, 'password': password});
+        body: jsonEncode({'deviceKey': deviceKey, 'name': name, 'password': password}));
+
+    // return response;
+    // fix FormatException: unexpected end of input (at character 1)
     return response;
-  }
-
-  Future<ResponseDefault> deleteCategory(String uidCategory) async {
-    final token = await secureStorage.readToken();
-
-    final resp = await http.delete(
-        Uri.parse('${Environment.endpointApi}/delete-category/' + uidCategory),
-        headers: {'Content-type': 'application/json', 'xx-token': token!});
-
-    return ResponseDefault.fromJson(jsonDecode(resp.body));
   }
 
   Future<bool> addDevice(

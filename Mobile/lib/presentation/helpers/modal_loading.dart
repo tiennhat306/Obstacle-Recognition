@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vision_aid/presentation/components/components.dart';
-import 'package:vision_aid/presentation/themes/colors_frave.dart';
+import 'package:vision_aid/presentation/themes/colors.dart';
 
 void modalLoading(BuildContext context) {
   showDialog(

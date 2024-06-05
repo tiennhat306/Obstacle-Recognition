@@ -8,9 +8,9 @@ import 'package:vision_aid/domain/models/response/addresses_response.dart';
 import 'package:vision_aid/domain/services/services.dart';
 import 'package:vision_aid/presentation/components/components.dart';
 import 'package:vision_aid/presentation/helpers/helpers.dart';
-import 'package:vision_aid/presentation/screens/client/profile_client_screen.dart';
-import 'package:vision_aid/presentation/screens/delivery/map_screen.dart';
-import 'package:vision_aid/presentation/themes/colors_frave.dart';
+import 'package:vision_aid/presentation/screens/client/profile_screen.dart';
+import 'package:vision_aid/presentation/screens/client/map_screen.dart';
+import 'package:vision_aid/presentation/themes/colors.dart';
 
 class ListAddressesScreen extends StatefulWidget {
   @override
@@ -35,7 +35,7 @@ class _ListAddressesScreenState extends State<ListAddressesScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
       if (await Permission.location.isGranted) {
-        Navigator.push(context, routeFrave(page: AddStreetAddressScreen()));
+        Navigator.push(context, routeCustom(page: AddStreetAddressScreen()));
       }
     }
   }
@@ -43,7 +43,7 @@ class _ListAddressesScreenState extends State<ListAddressesScreen>
   void accessLocation(PermissionStatus status) {
     switch (status) {
       case PermissionStatus.granted:
-        Navigator.push(context, routeFrave(page: AddStreetAddressScreen()));
+        Navigator.push(context, routeCustom(page: AddStreetAddressScreen()));
         break;
       case PermissionStatus.limited:
         break;
@@ -79,7 +79,7 @@ class _ListAddressesScreenState extends State<ListAddressesScreen>
           leadingWidth: 80,
           leading: TextButton(
               onPressed: () => Navigator.pushReplacement(
-                  context, routeFrave(page: ProfileClientScreen())),
+                  context, routeCustom(page: ProfileScreen())),
               child: const TextCustom(
                   text: 'Cancel',
                   color: ColorsEnum.primaryColor,
@@ -95,7 +95,7 @@ class _ListAddressesScreenState extends State<ListAddressesScreen>
         body: FutureBuilder<List<ListAddress>>(
             future: userServices.getAddresses(),
             builder: (context, snapshot) => (!snapshot.hasData)
-                ? const ShimmerFrave()
+                ? const ShimmerUI()
                 : _ListAddresses(listAddress: snapshot.data!)),
       ),
     );
@@ -148,10 +148,11 @@ class _ListAddressesState extends State<_ListAddresses> {
                         borderRadius: BorderRadius.circular(10.0)),
                     child: ListTile(
                       leading: BlocBuilder<UserBloc, UserState>(
-                          builder: (_, state) => (widget.listAddress[i].isDefault)
-                              ? Icon(Icons.radio_button_checked_rounded,
-                                  color: ColorsEnum.primaryColor)
-                              : Icon(Icons.radio_button_off_rounded)),
+                          builder: (_, state) =>
+                              (widget.listAddress[i].isDefault)
+                                  ? Icon(Icons.radio_button_checked_rounded,
+                                      color: ColorsEnum.primaryColor)
+                                  : Icon(Icons.radio_button_off_rounded)),
                       title: TextCustom(
                           text: widget.listAddress[i].street,
                           fontSize: 20,
@@ -163,7 +164,8 @@ class _ListAddressesState extends State<_ListAddresses> {
                       trailing: Icon(Icons.swap_horiz_rounded,
                           color: Colors.red[300]),
                       onTap: () async {
-                        userBloc.add(OnSelectAddressButtonEvent(i, widget.listAddress[i]));
+                        userBloc.add(OnSelectAddressButtonEvent(
+                            i, widget.listAddress[i]));
                         await userServices.setDefaultAddress(i);
 
                         setState(() {

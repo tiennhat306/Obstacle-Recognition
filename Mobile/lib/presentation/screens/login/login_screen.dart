@@ -3,11 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vision_aid/domain/bloc/blocs.dart';
 import 'package:vision_aid/presentation/components/components.dart';
 import 'package:vision_aid/presentation/helpers/helpers.dart';
-import 'package:vision_aid/presentation/screens/client/client_home_screen.dart';
-import 'package:vision_aid/presentation/screens/home/select_role_screen.dart';
+import 'package:vision_aid/presentation/screens/client/home_screen.dart';
 import 'package:vision_aid/presentation/screens/intro/intro_screen.dart';
 import 'package:vision_aid/presentation/screens/login/forgot_password_screen.dart';
-import 'package:vision_aid/presentation/themes/colors_frave.dart';
+import 'package:vision_aid/presentation/themes/colors.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -56,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
           // if ( state.rolId == '2' ){
 
           Navigator.pushAndRemoveUntil(
-              context, routeFrave(page: ClientHomeScreen()), (route) => false);
+              context, routeCustom(page: HomeScreen()), (route) => false);
 
           // }
         }
@@ -78,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       InkWell(
                         onTap: () => Navigator.pushReplacement(
-                            context, routeFrave(page: IntroScreen())),
+                            context, routeCustom(page: IntroScreen())),
                         borderRadius: BorderRadius.circular(100.0),
                         child: Container(
                           height: 40,
@@ -129,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 50.0),
                 const TextCustom(text: 'Email Address'),
                 const SizedBox(height: 5.0),
-                FormFieldFrave(
+                FormFieldValid(
                   controller: _emailController,
                   hintText: 'email@gmail.com',
                   keyboardType: TextInputType.emailAddress,
@@ -138,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 20.0),
                 const TextCustom(text: 'Password'),
                 const SizedBox(height: 5.0),
-                FormFieldFrave(
+                FormFieldValid(
                   controller: _passwordController,
                   hintText: '********',
                   isPassword: true,
@@ -149,13 +148,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     alignment: Alignment.centerRight,
                     child: InkWell(
                         onTap: () => Navigator.push(
-                            context, routeFrave(page: ForgotPasswordScreen())),
+                            context, routeCustom(page: ForgotPasswordScreen())),
                         child: TextCustom(
                             text: 'Forgot Password?',
                             fontSize: 17,
                             color: ColorsEnum.primaryColor))),
                 const SizedBox(height: 40.0),
-                BtnFrave(
+                Btn(
                   text: 'Login',
                   fontSize: 21,
                   height: 50,

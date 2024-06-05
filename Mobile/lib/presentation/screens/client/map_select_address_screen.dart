@@ -65,12 +65,6 @@ class _CreateMapState extends State<_CreateMap> {
                     },
                     onCameraMove: (position) =>
                         mapLocation.add(OnMoveMapEvent(position.target)),
-                    onCameraIdle: () {
-                      if (state.locationCentral != null) {
-                        mapLocation.add(OnGetAddressLocationEvent(
-                            mapLocation.state.locationCentral!));
-                      }
-                    },
                   ),
                   SafeArea(
                     child: Padding(

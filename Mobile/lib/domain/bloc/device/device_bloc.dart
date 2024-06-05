@@ -5,9 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart';
 import 'package:meta/meta.dart';
-import 'package:vision_aid/domain/models/product_cart.dart';
 import 'package:vision_aid/domain/models/response/addresses_response.dart';
-import 'package:vision_aid/domain/services/orders_services.dart';
 import 'package:vision_aid/domain/services/services.dart';
 import 'package:vision_aid/domain/services/user_services.dart';
 import 'package:vision_aid/main.dart';
@@ -17,100 +15,11 @@ part 'device_state.dart';
 
 class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
   DeviceBloc() : super(DeviceState()) {
-    // on<OnAddNewDeviceEvent>( _onAddNewDevice );
-    // on<OnUpdateStatusOrderToDispatchedEvent>( _onUpdateStatusOrderToDispatched );
-    // on<OnUpdateStatusOrderOnWayEvent>( _onUpdateStatusOrderOnWay );
     on<OnGetDeviceLocationEvent>(_onGetDeviceLocation);
     on<OnEditDeviceNetworkEvent>(_onEditDeviceNetwork);
     on<OnAddDeviceEvent>(_onAddDevice);
   }
 
-  // Future<void> _onAddNewDevice(OnAddNewDeviceEvent event, Emitter<DeviceState> emit) async {
-
-  //   try {
-
-  //     // emit( LoadingOrderState() );
-
-  //     // await Future.delayed(Duration(milliseconds: 1500));
-
-  //     // // final resp = await ordersServices.addNewDevice(event.uidAddress, event.total, event.typePayment, event.products);
-
-  //     // if( resp.resp ) {
-
-  //     //   final listTokens = await userServices.getAdminsNotificationToken();
-
-  //     //   Map<String, dynamic> data = { 'click_action' : 'FLUTTER_NOTIFICATION_CLICK' };
-
-  //     //   await pushNotification.sendNotificationMultiple(
-  //     //     listTokens,
-  //     //     data,
-  //     //     'Successful purchase',
-  //     //     'You have a new order'
-  //     //   );
-
-  //     // //  emit( SuccessDeviceState() );
-
-  //     // } else {
-  //     //   emit( FailureDeviceState( resp.msg ) );
-  //     // }
-
-  //   } catch (e) {
-  //     emit( FailureDeviceState( e.toString() ) );
-  //   }
-
-  // }
-
-  // Future<void> _onUpdateStatusOrderToDispatched(OnUpdateStatusOrderToDispatchedEvent event, Emitter<DeviceState> emit) async {
-
-  //   try {
-
-  //     // emit( LoadingOrderState() );
-
-  //     final resp = await ordersServices.updateStatusOrderToDispatched(event.idOrder, event.idDelivery);
-
-  //     await Future.delayed(Duration(seconds: 1));
-
-  //     if( resp.resp ){
-
-  //       Map<String, dynamic> data = { 'click_action' : 'FLUTTER_NOTIFICATION_CLICK' };
-
-  //       await pushNotification.sendNotification(
-  //         event.notificationTokenDelivery,
-  //         data,
-  //         'Assigned order',
-  //         'New order assigned'
-  //       );
-
-  //       // emit( SuccessDeviceState() );
-
-  //     } else {
-  //       emit( FailureDeviceState(resp.msg) );
-  //     }
-
-  //   } catch (e) {
-  //     emit( FailureDeviceState(e.toString()) );
-  //   }
-
-  // }
-
-  // Future<void> _onUpdateStatusOrderOnWay( OnUpdateStatusOrderOnWayEvent event, Emitter<DeviceState> emit ) async {
-
-  //   try {
-
-  //     // emit(  LoadingOrderState() );
-
-  //     // final resp = await ordersServices.updateOrderStatusOnWay(event.idOrder, event.locationDelivery.latitude.toString(), event.locationDelivery.longitude.toString());
-
-  //     // await Future.delayed(Duration(seconds: 1));
-
-  //     // if( resp.resp ) emit( SuccessDeviceState() );
-  //     // else emit( FailureDeviceState(resp.msg) );
-
-  //   } catch (e) {
-  //     emit( FailureDeviceState(e.toString()) );
-  //   }
-
-  // }
 
   Future<void> _onGetDeviceLocation(
       OnGetDeviceLocationEvent event, Emitter<DeviceState> emit) async {
@@ -147,11 +56,10 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
       Response resp = await deviceServices.updateDeviceNetwork(
           event.deviceKey, event.name, event.password);
 
-      Map<String, dynamic> body = jsonDecode(resp.body) as Map<String, dynamic>;
-
       if (resp.statusCode == 200) {
         emit(SuccessDeviceNetworkState());
       } else {
+        Map<String, dynamic> body = jsonDecode(resp.body) as Map<String, dynamic>;
         emit(FailureDeviceState(body['message']));
       }
     } catch (e) {

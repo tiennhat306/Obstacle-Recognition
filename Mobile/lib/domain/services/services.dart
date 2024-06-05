@@ -1,9 +1,4 @@
-export 'package:vision_aid/domain/services/auth_Services.dart';
 export 'package:vision_aid/domain/services/device_services.dart';
-export 'package:vision_aid/domain/services/delivery_services.dart';
 export 'package:vision_aid/domain/services/google_services.dart';
 export 'package:vision_aid/domain/services/map_box_services.dart';
-export 'package:vision_aid/domain/services/orders_services.dart';
-export 'package:vision_aid/domain/services/products_services.dart';
-export 'package:vision_aid/domain/services/push_notification.dart';
 export 'package:vision_aid/domain/services/user_services.dart';

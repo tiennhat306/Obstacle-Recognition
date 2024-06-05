@@ -7,11 +7,9 @@ import 'package:vision_aid/data/env/environment.dart';
 import 'package:vision_aid/data/local_secure/secure_storage.dart';
 import 'package:vision_aid/domain/bloc/auth/auth_bloc.dart';
 import 'package:vision_aid/domain/bloc/device/device_bloc.dart';
-import 'package:vision_aid/domain/models/response/address_one_response.dart';
 import 'package:vision_aid/domain/models/response/addresses_response.dart';
 import 'package:vision_aid/domain/models/response/response_default.dart';
 import 'package:vision_aid/domain/models/response/response_login.dart';
-import 'package:vision_aid/domain/models/response/user_updated_response.dart';
 import 'package:vision_aid/firebase/firebase_helper.dart';
 import 'package:vision_aid/main.dart';
 
@@ -48,8 +46,7 @@ class UserServices {
         phone: data['phone'],
         email: data['email'],
         image: data['image'],
-        address: address,
-        notificationToken: data['notification_token'],
+        address: address
       );
     } else {
       // throw Exception('User not found');
@@ -70,16 +67,6 @@ class UserServices {
     } else {
       return false;
     }
-  }
-
-  Future<UserUpdated> getUserUpdated() async {
-    final token = await secureStorage.readToken();
-
-    final response = await http.get(
-        Uri.parse('${Environment.endpointApi}/get-user-updated'),
-        headers: {'Accept': 'application/json', 'xx-token': token!});
-
-    return UserUpdatedResponse.fromJson(jsonDecode(response.body)).user;
   }
 
   Future<bool> changePassword(
@@ -119,59 +106,6 @@ class UserServices {
         'PUT', Uri.parse('${Environment.endpointApi}/change-image-profile'))
       ..headers['Accept'] = 'application/json'
       ..headers['xx-token'] = token!
-      ..files.add(await http.MultipartFile.fromPath('image', image));
-
-    final response = await request.send();
-    var data = await http.Response.fromStream(response);
-
-    return ResponseDefault.fromJson(jsonDecode(data.body));
-  }
-
-  Future<ResponseDefault> registerDelivery(
-      String name,
-      String lastname,
-      String phone,
-      String email,
-      String password,
-      String image,
-      String nToken) async {
-    final token = await secureStorage.readToken();
-
-    var request = http.MultipartRequest(
-        'POST', Uri.parse('${Environment.endpointApi}/register-delivery'))
-      ..headers['Accept'] = 'application/json'
-      ..headers['xx-token'] = token!
-      ..fields['firstname'] = name
-      ..fields['lastname'] = lastname
-      ..fields['phone'] = phone
-      ..fields['email'] = email
-      ..fields['password'] = password
-      ..fields['notification_token'] = nToken
-      ..files.add(await http.MultipartFile.fromPath('image', image));
-
-    final response = await request.send();
-    var data = await http.Response.fromStream(response);
-
-    return ResponseDefault.fromJson(jsonDecode(data.body));
-  }
-
-  Future<ResponseDefault> registerClient(
-      String name,
-      String lastname,
-      String phone,
-      String image,
-      String email,
-      String password,
-      String nToken) async {
-    var request = http.MultipartRequest(
-        'POST', Uri.parse('${Environment.endpointApi}/register-client'))
-      ..headers['Accept'] = 'application/json'
-      ..fields['firstname'] = name
-      ..fields['lastname'] = lastname
-      ..fields['phone'] = phone
-      ..fields['email'] = email
-      ..fields['password'] = password
-      ..fields['notification_token'] = nToken
       ..files.add(await http.MultipartFile.fromPath('image', image));
 
     final response = await request.send();
@@ -275,7 +209,7 @@ class UserServices {
     return ResponseDefault.fromJson(jsonDecode(resp.body));
   }
 
-  Future<bool> addNewAddressLocation(String street, String reference,
+  Future<bool> addNewAddressLocation(String reference,
       double latitude, double longitude) async {
     final token = await secureStorage.readToken();
 
@@ -304,7 +238,6 @@ class UserServices {
       List<dynamic> addresses = data['addresses'];
 
       addresses.add({
-        'street': street,
         'reference': reference,
         'latitude': latitude,
         'longitude': longitude,
@@ -316,50 +249,6 @@ class UserServices {
     } else {
       return false;
     }
-  }
-
-  Future<AddressOneResponse> getAddressOne() async {
-    final token = await secureStorage.readToken();
-
-    final resp = await http.get(
-        Uri.parse('${Environment.endpointApi}/get-address'),
-        headers: {'Accept': 'application/json', 'xx-token': token!});
-
-    return AddressOneResponse.fromJson(jsonDecode(resp.body));
-  }
-
-  Future<ResponseDefault> updateNotificationToken() async {
-    final token = await secureStorage.readToken();
-    final nToken = await pushNotification.getNotificationToken();
-
-    final resp = await http.put(
-        Uri.parse('${Environment.endpointApi}/update-notification-token'),
-        headers: {'Accept': 'application/json', 'xx-token': token!},
-        body: {'nToken': nToken});
-
-    return ResponseDefault.fromJson(jsonDecode(resp.body));
-  }
-
-  Future<List<String>> getAdminsNotificationToken() async {
-    final token = await secureStorage.readToken();
-
-    final resp = await http.get(
-        Uri.parse('${Environment.endpointApi}/get-admins-notification-token'),
-        headers: {'Accept': 'application/json', 'xx-token': token!});
-
-    return List<String>.from(jsonDecode(resp.body));
-  }
-
-  Future<ResponseDefault> updateDeliveryToClient(String idPerson) async {
-    final token = await secureStorage.readToken();
-
-    final resp = await http.put(
-      Uri.parse(
-          '${Environment.endpointApi}/update-delivery-to-client/$idPerson'),
-      headers: {'Accept': 'application/json', 'xx-token': token!},
-    );
-
-    return ResponseDefault.fromJson(jsonDecode(resp.body));
   }
 }
 

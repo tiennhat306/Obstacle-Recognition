@@ -2,61 +2,59 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:form_field_validator/form_field_validator.dart';
 import 'package:vision_aid/domain/bloc/blocs.dart';
-import 'package:vision_aid/domain/bloc/device/device_bloc.dart';
 import 'package:vision_aid/presentation/components/components.dart';
 import 'package:vision_aid/presentation/helpers/helpers.dart';
 import 'package:vision_aid/presentation/themes/colors.dart';
 
-class AddDeviceScreen extends StatefulWidget {
+class EditProfileScreen extends StatefulWidget {
   @override
-  _AddDeviceScreenState createState() => _AddDeviceScreenState();
+  _EditProfileScreenState createState() => _EditProfileScreenState();
 }
 
-class _AddDeviceScreenState extends State<AddDeviceScreen> {
-  TextEditingController _keyController = TextEditingController();
-  TextEditingController _phoneController = TextEditingController();
-  TextEditingController _usernameController = TextEditingController();
+class _EditProfileScreenState extends State<EditProfileScreen> {
+  late TextEditingController _nameController;
+  late TextEditingController _phoneController;
+  late TextEditingController _emailController;
 
   final _keyForm = GlobalKey<FormState>();
 
-  // Future<void> getPersonalInformation() async {
+  Future<void> getPersonalInformation() async {
+    final userBloc = BlocProvider.of<UserBloc>(context).state.user!;
 
-  //   final userBloc = BlocProvider.of<UserBloc>(context).state.user!;
-
-  //   _keyController = TextEditingController(text: userBloc.name);
-  //   _phoneController = TextEditingController(text: userBloc.phone);
-  //   _usernameController = TextEditingController(text: userBloc.email );
-  // }
+    _nameController = TextEditingController(text: userBloc.name);
+    _phoneController = TextEditingController(text: userBloc.phone);
+    _emailController = TextEditingController(text: userBloc.email);
+  }
 
   @override
   void initState() {
     super.initState();
-    // getPersonalInformation();
+    getPersonalInformation();
   }
 
   @override
   void dispose() {
-    _keyController.clear();
+    _nameController.clear();
     _phoneController.clear();
-    _usernameController.clear();
-    _keyController.dispose();
+    _emailController.clear();
+    _nameController.dispose();
     _phoneController.dispose();
-    _usernameController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final deviceBloc = BlocProvider.of<DeviceBloc>(context);
+    final userBloc = BlocProvider.of<UserBloc>(context);
 
-    return BlocListener<DeviceBloc, DeviceState>(
+    return BlocListener<UserBloc, UserState>(
       listener: (context, state) {
-        if (state is LoadingDeviceState) {
+        if (state is LoadingUserState) {
           modalLoading(context);
-        } else if (state is SuccessAddDeviceState) {
+        } else if (state is SuccessUserState) {
           Navigator.pop(context);
-          modalSuccess(context, 'Device added', () => Navigator.pop(context));
-        } else if (state is FailureDeviceState) {
+          modalSuccess(context, 'User updated', () => Navigator.pop(context));
+        } else if (state is FailureUserState) {
           Navigator.pop(context);
           errorMessageSnack(context, state.error);
         }
@@ -83,12 +81,14 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
             TextButton(
                 onPressed: () {
                   if (_keyForm.currentState!.validate()) {
-                    deviceBloc.add(OnAddDeviceEvent(_keyController.text,
-                        _phoneController.text, _usernameController.text));
+                    userBloc.add(OnEditUserEvent(_nameController.text,
+                        _phoneController.text, _emailController.text));
                   }
                 },
                 child: TextCustom(
-                    text: 'Save', fontSize: 16, color: Colors.amber[900]!))
+                    text: 'Update account',
+                    fontSize: 16,
+                    color: Colors.amber[900]!))
           ],
         ),
         body: SafeArea(
@@ -100,12 +100,12 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                     horizontal: 20.0, vertical: 10.0),
                 children: [
                   const TextCustom(
-                      text: 'Device key', color: ColorsEnum.secundaryColor),
+                      text: 'Name', color: ColorsEnum.secundaryColor),
                   const SizedBox(height: 5.0),
                   FormFieldValid(
-                      controller: _keyController,
-                      validator: RequiredValidator(
-                          errorText: 'Device\'s key is required')),
+                      controller: _nameController,
+                      validator:
+                          RequiredValidator(errorText: 'Name is required')),
                   const SizedBox(height: 20.0),
                   const TextCustom(
                       text: 'Phone', color: ColorsEnum.secundaryColor),
@@ -117,13 +117,9 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                   ),
                   const SizedBox(height: 20.0),
                   const TextCustom(
-                      text: 'Username', color: ColorsEnum.secundaryColor),
+                      text: 'Email Address', color: ColorsEnum.secundaryColor),
                   const SizedBox(height: 5.0),
-                  FormFieldValid(
-                    controller: _usernameController,
-                    validator:
-                        RequiredValidator(errorText: 'Username is required'),
-                  ),
+                  FormFieldValid(controller: _emailController, readOnly: true),
                   const SizedBox(height: 20.0),
                 ],
               )),

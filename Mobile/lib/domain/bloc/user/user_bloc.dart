@@ -5,7 +5,6 @@ import 'package:bloc/bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:vision_aid/domain/models/response/addresses_response.dart';
 import 'package:vision_aid/domain/models/response/response_login.dart';
-import 'package:vision_aid/domain/services/push_notification.dart';
 import 'package:vision_aid/domain/services/user_services.dart';
 import 'package:vision_aid/firebase/firebase_auth_helper.dart';
 import 'package:vision_aid/firebase/firebase_helper.dart';
@@ -25,8 +24,6 @@ class UserBloc extends Bloc<UserEvent, UserState> {
     on<OnEditUserEvent>(_onEditProfileUser);
     on<OnChangePasswordEvent>(_onChangePassword);
     on<OnRegisterClientEvent>(_onRegisterClient);
-    on<OnRegisterDeliveryEvent>(_onRegisterDelivery);
-    on<OnUpdateDeliveryToClientEvent>(_onUpdateDeliveryToClient);
     on<OnDeleteStreetAddressEvent>(_onDeleteStreetAddress);
     on<OnSelectAddressButtonEvent>(_onSelectAddressButton);
     on<OnAddNewAddressEvent>(_onAddNewStreetAddress);
@@ -120,9 +117,6 @@ class UserBloc extends Bloc<UserEvent, UserState> {
       OnRegisterClientEvent event, Emitter<UserState> emit) async {
     try {
       emit(LoadingUserState());
-
-      final nToken = await pushNotification.getNotificationToken();
-
       // final data = await userServices.registerClient(event.name, event.lastname, event.phone, event.image, event.email, event.password, nToken!);
 
       UserCredential? userCredential =
@@ -133,7 +127,6 @@ class UserBloc extends Bloc<UserEvent, UserState> {
         'phone': event.phone,
         'email': event.email,
         'image': "", // event.image,
-        'notification_token': nToken!
       });
 
       if (userCredential != null) {
@@ -144,56 +137,6 @@ class UserBloc extends Bloc<UserEvent, UserState> {
 
       // if( data.resp ) emit( SuccessUserState() );
       // else emit( FailureUserState(data.msg) );
-    } catch (e) {
-      emit(FailureUserState(e.toString()));
-    }
-  }
-
-  Future<void> _onRegisterDelivery(
-      OnRegisterDeliveryEvent event, Emitter<UserState> emit) async {
-    try {
-      emit(LoadingUserState());
-
-      final nToken = await pushNotification.getNotificationToken();
-
-      final data = await userServices.registerDelivery(
-          event.name,
-          event.lastname,
-          event.phone,
-          event.email,
-          event.password,
-          event.image,
-          nToken!);
-
-      if (data.resp) {
-        final user = await userServices.getUserById();
-
-        emit(SuccessUserState());
-
-        emit(state.copyWith(user: user));
-      } else
-        emit(FailureUserState(data.msg));
-    } catch (e) {
-      emit(FailureUserState(e.toString()));
-    }
-  }
-
-  Future<void> _onUpdateDeliveryToClient(
-      OnUpdateDeliveryToClientEvent event, Emitter<UserState> emit) async {
-    try {
-      emit(LoadingUserState());
-
-      final data = await userServices.updateDeliveryToClient(event.idPerson);
-
-      if (data.resp) {
-        final user = await userServices.getUserById();
-
-        emit(SuccessUserState());
-
-        emit(state.copyWith(user: user));
-      } else {
-        emit(FailureUserState(data.msg));
-      }
     } catch (e) {
       emit(FailureUserState(e.toString()));
     }
@@ -237,7 +180,6 @@ class UserBloc extends Bloc<UserEvent, UserState> {
       emit(LoadingUserState());
 
       final data = await userServices.addNewAddressLocation(
-          event.street,
           event.reference,
           event.location.latitude,
           event.location.longitude);

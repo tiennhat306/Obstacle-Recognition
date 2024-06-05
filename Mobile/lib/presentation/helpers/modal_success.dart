@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:vision_aid/presentation/components/components.dart';
-import 'package:vision_aid/presentation/themes/colors_frave.dart';
+import 'package:vision_aid/presentation/themes/colors.dart';
 
 void modalSuccess(BuildContext context, String text, VoidCallback onPressed ){
 

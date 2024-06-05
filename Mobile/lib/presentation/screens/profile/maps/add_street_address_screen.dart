@@ -10,59 +10,52 @@ import 'package:vision_aid/presentation/helpers/helpers.dart';
 import 'package:vision_aid/presentation/helpers/navigator_route_fade_in.dart';
 import 'package:vision_aid/presentation/screens/profile/list_addresses_screen.dart';
 import 'package:vision_aid/presentation/screens/profile/maps/map_address_screen.dart';
-import 'package:vision_aid/presentation/themes/colors_frave.dart';
+import 'package:vision_aid/presentation/themes/colors.dart';
 
 class AddStreetAddressScreen extends StatefulWidget {
-
   @override
   _AddStreetAddressScreenState createState() => _AddStreetAddressScreenState();
 }
 
-
 class _AddStreetAddressScreenState extends State<AddStreetAddressScreen> {
-
-  late TextEditingController _streetAddressController;
+  late TextEditingController _referenceAddressController;
   final _keyForm = GlobalKey<FormState>();
 
   @override
-  void initState() { 
-    _streetAddressController = TextEditingController();
+  void initState() {
+    _referenceAddressController = TextEditingController();
     super.initState();
   }
 
   @override
-  void dispose() { 
-    _streetAddressController.clear();
-    _streetAddressController.dispose();
+  void dispose() {
+    _referenceAddressController.clear();
+    _referenceAddressController.dispose();
     super.dispose();
   }
-  
 
   @override
-  Widget build(BuildContext context){
-
+  Widget build(BuildContext context) {
     final userBloc = BlocProvider.of<UserBloc>(context);
     final myLocationBloc = BlocProvider.of<MylocationmapBloc>(context);
 
     return BlocListener<UserBloc, UserState>(
       listener: (context, state) {
-        
-        if( state is LoadingUserState ){
-
+        if (state is LoadingUserState) {
           modalLoading(context);
-
-        } else if ( state is SuccessAddUserAddressState ){
-
+        } else if (state is SuccessAddUserAddressState) {
           Navigator.pop(context);
-          modalSuccess(context, 'Street Address added successfully', () => Navigator.pushReplacement(context, routeFrave(page: ListAddressesScreen())));
-
-        } else if ( state is FailureUserState ){
-
+          modalSuccess(
+              context,
+              'Street Address added successfully',
+              () => Navigator.pushReplacement(
+                  context, routeCustom(page: ListAddressesScreen())));
+        } else if (state is FailureUserState) {
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: TextCustom(text: state.error, color: Colors.white), backgroundColor: Colors.red));
-
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: TextCustom(text: state.error, color: Colors.white),
+              backgroundColor: Colors.red));
         }
-
       },
       child: Scaffold(
         backgroundColor: Colors.white,
@@ -72,77 +65,75 @@ class _AddStreetAddressScreenState extends State<AddStreetAddressScreen> {
           centerTitle: true,
           elevation: 0,
           leadingWidth: 80,
-            leading: TextButton(
-              onPressed: () => Navigator.pushReplacement(context, routeFrave(page: ListAddressesScreen())), 
-              child: const TextCustom(text: 'Cancel', color: ColorsEnum.primaryColor, fontSize: 17 )
-            ),
-            actions: [
-              TextButton(
+          leading: TextButton(
+              onPressed: () => Navigator.pushReplacement(
+                  context, routeCustom(page: ListAddressesScreen())),
+              child: const TextCustom(
+                  text: 'Cancel',
+                  color: ColorsEnum.primaryColor,
+                  fontSize: 17)),
+          actions: [
+            TextButton(
                 onPressed: () async {
-                  if( _keyForm.currentState!.validate() ){
-                    userBloc.add( 
-                      OnAddNewAddressEvent( 
-                        _streetAddressController.text.trim(), 
-                        myLocationBloc.state.reference,
-                        myLocationBloc.state.locationCentral!
-                      )
-                    );
+                  if (_keyForm.currentState!.validate()) {
+                    userBloc.add(OnAddNewAddressEvent(
+                        _referenceAddressController.text.trim(),
+                        myLocationBloc.state.locationCentral!));
                   }
-                }, 
-                child: const TextCustom(text: 'Save', color: ColorsEnum.primaryColor, fontSize: 17 )
-              ),
-            ],
+                },
+                child: const TextCustom(
+                    text: 'Save',
+                    color: ColorsEnum.primaryColor,
+                    fontSize: 17)),
+          ],
         ),
         body: SafeArea(
           child: Form(
             key: _keyForm,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const TextCustom(text: 'Street Address'),
+                  const TextCustom(text: 'Tên địa chỉ'),
                   const SizedBox(height: 5.0),
                   // FormFieldFrave(
                   //   controller: _streetAddressController,
                   //   validator: RequiredValidator(errorText: 'Street Address is required'),
                   //   hintText: 'Enter your street address',
-                    
-
 
                   // ),
                   BlocBuilder<MylocationmapBloc, MylocationmapState>(
-                    builder: (context, state) {
-                      _streetAddressController.text = state.street;
-                      return TextFormField(
-                        
-                        controller: _streetAddressController,
-                        validator: RequiredValidator(errorText: 'Street Address is required'),
-                        decoration: InputDecoration(
+                      builder: (context, state) {
+                    return TextFormField(
+                      controller: _referenceAddressController,
+                      validator: RequiredValidator(
+                          errorText: 'Reference Address is required'),
+                      decoration: InputDecoration(
                           hintText: 'Nhập địa chỉ của bạn',
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(5.0),
-                            borderSide: BorderSide(color: Colors.grey)
-                          )
-                        ),
-                      );
-                    }
-                  ),
+                              borderRadius: BorderRadius.circular(5.0),
+                              borderSide: BorderSide(color: Colors.grey))),
+                    );
+                  }),
                   const SizedBox(height: 20.0),
-                  const TextCustom(text: 'Reference'),
+                  const TextCustom(text: 'Chọn vị trí trên bản đồ'),
                   const SizedBox(height: 5.0),
                   InkWell(
                     onTap: () async {
-                      
                       final permissionGPS = await Permission.location.isGranted;
-                      final gpsActive = await Geolocator.isLocationServiceEnabled();
-          
-                      if( permissionGPS && gpsActive ){
-                        Navigator.push(context, navigatorPageFadeInFrave(context, MapLocationAddressScreen()));
-                      }else {
+                      final gpsActive =
+                          await Geolocator.isLocationServiceEnabled();
+
+                      if (permissionGPS && gpsActive) {
+                        Navigator.push(
+                            context,
+                            navigatorPageFadeInFrave(
+                                context, MapLocationAddressScreen()));
+                      } else {
                         Navigator.pop(context);
                       }
-          
                     },
                     child: Container(
                       padding: const EdgeInsets.only(left: 10.0),
@@ -150,20 +141,20 @@ class _AddStreetAddressScreenState extends State<AddStreetAddressScreen> {
                       height: 100,
                       width: MediaQuery.of(context).size.width,
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey, width: .5),
-                        borderRadius: BorderRadius.circular(5.0)
-                      ),
+                          border: Border.all(color: Colors.grey, width: .5),
+                          borderRadius: BorderRadius.circular(5.0)),
                       child: BlocBuilder<MylocationmapBloc, MylocationmapState>(
-                        builder: (_, state) 
-                          => TextCustom(text: state.reference)
-                      ),
+                          builder: (_, state) =>
+                              TextCustom(text: state.existsLocation ? 'Đã xác định vị trị' : 'Vị trí không xác định')),
                     ),
                   ),
                   SizedBox(height: 5.0),
                   Align(
-                    alignment: Alignment.centerRight,
-                    child: const TextCustom(text: 'Chọn để xác định trên bản đồ', fontSize: 16, color: Colors.grey )
-                  )
+                      alignment: Alignment.centerRight,
+                      child: const TextCustom(
+                          text: 'Chọn để xác định trên bản đồ',
+                          fontSize: 16,
+                          color: Colors.grey))
                 ],
               ),
             ),

@@ -19,11 +19,3 @@ class OnMoveMapEvent extends MylocationmapEvent {
   OnMoveMapEvent(this.location);
 }
 
-
-class OnGetAddressLocationEvent extends MylocationmapEvent {
-  final LatLng location;
-
-  OnGetAddressLocationEvent(this.location);
-}
-
-

@@ -7,16 +7,12 @@ class MylocationmapState {
   final LatLng? location;
   final bool mapReady;
   final LatLng? locationCentral;
-  final String street;
-  final String reference;
 
   MylocationmapState({
     this.existsLocation = false, 
     this.location,
     this.mapReady = false,
     this.locationCentral,
-    this.street = '',
-    this.reference = ''
   });
 
   MylocationmapState copyWith({ bool? existsLocation, LatLng? location, bool? mapReady, LatLng? locationCentral, String? street, String? reference })
@@ -25,8 +21,6 @@ class MylocationmapState {
       location: location ?? this.location,
       mapReady: mapReady ?? this.mapReady,
       locationCentral: locationCentral ?? this.locationCentral,
-      street: street ?? this.street,
-      reference: reference ?? this.reference
     );
 
 

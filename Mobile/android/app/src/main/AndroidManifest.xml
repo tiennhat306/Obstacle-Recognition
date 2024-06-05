@@ -32,9 +32,9 @@
 
 
     <application
-        android:label="vision_aid"
+        android:label="Vision Aid"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/visionaid_logo">
 
         <meta-data android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyCkhj2ULflBLvbTY8UNE-TcBlgx1ysA8XM"/>

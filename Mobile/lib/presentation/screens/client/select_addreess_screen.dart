@@ -7,7 +7,6 @@
 // import 'package:vision_aid/presentation/components/components.dart';
 // import 'package:vision_aid/presentation/themes/colors_frave.dart';
 
-
 // class SelectAddressScreen extends StatelessWidget {
 
 //   @override
@@ -33,7 +32,7 @@
 //       ),
 //       body: FutureBuilder<List<ListAddress>>(
 //           future: userServices.getAddresses(),
-//           builder: (context, snapshot) 
+//           builder: (context, snapshot)
 //             => (!snapshot.hasData)
 //               ? const ShimmerFrave()
 //               : _ListAddresses(listAddress: snapshot.data!)
@@ -43,7 +42,7 @@
 // }
 
 // class _ListAddresses extends StatelessWidget {
-  
+
 //   final List<ListAddress> listAddress;
 
 //   const _ListAddresses({Key? key, required this.listAddress}) : super(key: key);
@@ -53,11 +52,11 @@
 
 //     final userBloc = BlocProvider.of<UserBloc>(context);
 
-//     return ( listAddress.length  != 0 ) 
+//     return ( listAddress.length  != 0 )
 //     ? ListView.builder(
 //         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
 //         itemCount: listAddress.length,
-//         itemBuilder: (_, i) 
+//         itemBuilder: (_, i)
 //           => Container(
 //               height: 70,
 //               width: MediaQuery.of(context).size.width,
@@ -68,7 +67,7 @@
 //               ),
 //               child: ListTile(
 //                 leading: BlocBuilder<UserBloc, UserState>(
-//                   builder: (_, state) 
+//                   builder: (_, state)
 //                     => ( listAddress[i].isDefault ) ? Icon(Icons.radio_button_checked_rounded, color: ColorsEnum.primaryColor) : Icon(Icons.radio_button_off_rounded)
 //                 ),
 //                 title: TextCustom(text: listAddress[i].street, fontSize: 20, fontWeight: FontWeight.w500 ),
@@ -99,8 +98,6 @@
 //   }
 // }
 
-
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -111,10 +108,8 @@ import 'package:vision_aid/domain/models/response/addresses_response.dart';
 import 'package:vision_aid/domain/services/services.dart';
 import 'package:vision_aid/presentation/components/components.dart';
 import 'package:vision_aid/presentation/helpers/helpers.dart';
-import 'package:vision_aid/presentation/screens/client/profile_client_screen.dart';
 import 'package:vision_aid/presentation/screens/client/select_street_address_screen.dart';
-import 'package:vision_aid/presentation/screens/delivery/map_screen.dart';
-import 'package:vision_aid/presentation/themes/colors_frave.dart';
+import 'package:vision_aid/presentation/themes/colors.dart';
 
 class SelectAddressScreen extends StatefulWidget {
   @override
@@ -139,7 +134,7 @@ class _SelectAddressScreenState extends State<SelectAddressScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.resumed) {
       if (await Permission.location.isGranted) {
-        Navigator.push(context, routeFrave(page: AddStreetAddressScreen()));
+        Navigator.push(context, routeCustom(page: AddStreetAddressScreen()));
       }
     }
   }
@@ -147,7 +142,7 @@ class _SelectAddressScreenState extends State<SelectAddressScreen>
   void accessLocation(PermissionStatus status) {
     switch (status) {
       case PermissionStatus.granted:
-        Navigator.push(context, routeFrave(page: SelectStreetAddressScreen()));
+        Navigator.push(context, routeCustom(page: SelectStreetAddressScreen()));
         break;
       case PermissionStatus.limited:
         break;
@@ -184,8 +179,10 @@ class _SelectAddressScreenState extends State<SelectAddressScreen>
           leading: IconButton(
             icon: Row(
               children: const [
-                Icon(Icons.arrow_back_ios_new_rounded, color: ColorsEnum.primaryColor, size: 21),
-                TextCustom(text: 'Back', fontSize: 16, color: ColorsEnum.primaryColor )
+                Icon(Icons.arrow_back_ios_new_rounded,
+                    color: ColorsEnum.primaryColor, size: 21),
+                TextCustom(
+                    text: 'Back', fontSize: 16, color: ColorsEnum.primaryColor)
               ],
             ),
             onPressed: () => Navigator.pop(context),
@@ -195,13 +192,15 @@ class _SelectAddressScreenState extends State<SelectAddressScreen>
                 onPressed: () async =>
                     accessLocation(await Permission.location.request()),
                 child: const TextCustom(
-                    text: 'Other', color: ColorsEnum.primaryColor, fontSize: 17)),
+                    text: 'Other',
+                    color: ColorsEnum.primaryColor,
+                    fontSize: 17)),
           ],
         ),
         body: FutureBuilder<List<ListAddress>>(
             future: userServices.getAddresses(),
             builder: (context, snapshot) => (!snapshot.hasData)
-                ? const ShimmerFrave()
+                ? const ShimmerUI()
                 : _ListAddresses(listAddress: snapshot.data!)),
       ),
     );
@@ -254,10 +253,11 @@ class _ListAddressesState extends State<_ListAddresses> {
                         borderRadius: BorderRadius.circular(10.0)),
                     child: ListTile(
                       leading: BlocBuilder<UserBloc, UserState>(
-                          builder: (_, state) => (widget.listAddress[i].isDefault)
-                              ? Icon(Icons.radio_button_checked_rounded,
-                                  color: ColorsEnum.primaryColor)
-                              : Icon(Icons.radio_button_off_rounded)),
+                          builder: (_, state) =>
+                              (widget.listAddress[i].isDefault)
+                                  ? Icon(Icons.radio_button_checked_rounded,
+                                      color: ColorsEnum.primaryColor)
+                                  : Icon(Icons.radio_button_off_rounded)),
                       title: TextCustom(
                           text: widget.listAddress[i].street,
                           fontSize: 20,
@@ -269,7 +269,8 @@ class _ListAddressesState extends State<_ListAddresses> {
                       trailing: Icon(Icons.swap_horiz_rounded,
                           color: Colors.red[300]),
                       onTap: () async {
-                        userBloc.add(OnSelectAddressButtonEvent(i, widget.listAddress[i]));
+                        userBloc.add(OnSelectAddressButtonEvent(
+                            i, widget.listAddress[i]));
                         await userServices.setDefaultAddress(i);
 
                         setState(() {

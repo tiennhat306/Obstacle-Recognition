@@ -43,19 +43,6 @@ class OnChangePasswordEvent extends UserEvent {
   OnChangePasswordEvent(this.currentPassword, this.newPassword);
 }
 
-
-class OnRegisterDeliveryEvent extends UserEvent {
-  final String name;
-  final String lastname;
-  final String phone;
-  final String email;
-  final String password;
-  final String image; 
-
-  OnRegisterDeliveryEvent(this.name, this.lastname, this.phone, this.email, this.password, this.image);
-}
-
-
 class OnRegisterClientEvent extends UserEvent {
   final String name;
   final String phone;
@@ -76,11 +63,10 @@ class OnDeleteStreetAddressEvent extends UserEvent {
 
 
 class OnAddNewAddressEvent extends UserEvent {
-  final String street;
   final String reference;
   final LatLng location;
 
-  OnAddNewAddressEvent(this.street, this.reference, this.location);
+  OnAddNewAddressEvent(this.reference, this.location);
 }
 
 
@@ -89,11 +75,4 @@ class OnSelectAddressButtonEvent extends UserEvent {
   final ListAddress address;
 
   OnSelectAddressButtonEvent(this.uidAddress, this.address);
-}
-
-
-class OnUpdateDeliveryToClientEvent extends UserEvent {
-  final String idPerson;
-
-  OnUpdateDeliveryToClientEvent(this.idPerson);
 }

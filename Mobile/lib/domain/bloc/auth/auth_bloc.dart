@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:meta/meta.dart';
 import 'package:vision_aid/data/local_secure/secure_storage.dart';
 import 'package:vision_aid/domain/models/response/addresses_response.dart';
-import 'package:vision_aid/domain/services/auth_Services.dart';
 import 'package:vision_aid/domain/services/user_services.dart';
 import 'package:vision_aid/firebase/firebase_helper.dart';
 import '../../models/response/response_login.dart';
@@ -21,7 +20,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   AuthBloc() : super(AuthState()) {
     on<LoginEvent>(_onLogin);
-    on<CheckLoginEvent>(_onCheckLogin);
     on<LogOutEvent>(_onLogOut);
   }
 
@@ -88,36 +86,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
               phone: data['phone'],
               image: data['image'],
               email: data['email'],
-              address: address,
-              notificationToken: data['notification_token'])));
+              address: address)));
         } else {
           emit(FailureAuthState('Error at user credential'));
         }
       } else {
         emit(FailureAuthState('Error at connect to firebase'));
-      }
-    } catch (e) {
-      emit(FailureAuthState(e.toString()));
-    }
-  }
-
-  Future<void> _onCheckLogin(
-      CheckLoginEvent event, Emitter<AuthState> emit) async {
-    try {
-      emit(LoadingAuthState());
-
-      if (await secureStorage.readToken() != null) {
-        final data = await authServices.renewLoginController();
-
-        if (data.resp) {
-          await secureStorage.persistenToken(data.token);
-
-          emit(state.copyWith(user: data.user));
-        } else {
-          emit(LogOutAuthState());
-        }
-      } else {
-        emit(LogOutAuthState());
       }
     } catch (e) {
       emit(FailureAuthState(e.toString()));

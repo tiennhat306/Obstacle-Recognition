@@ -8,7 +8,7 @@ import 'package:vision_aid/domain/bloc/blocs.dart';
 import 'package:vision_aid/presentation/components/components.dart';
 import 'package:vision_aid/presentation/helpers/helpers.dart';
 import 'package:vision_aid/presentation/screens/login/login_screen.dart';
-import 'package:vision_aid/presentation/themes/colors_frave.dart';
+import 'package:vision_aid/presentation/themes/colors.dart';
 
 class RegisterClientScreen extends StatefulWidget {
   @override
@@ -63,7 +63,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
               context,
               'Client Registered successfully',
               () => Navigator.pushReplacement(
-                  context, routeFrave(page: LoginScreen())));
+                  context, routeCustom(page: LoginScreen())));
         } else if (state is FailureUserState) {
           Navigator.pop(context);
           errorMessageSnack(context, state.error);
@@ -109,9 +109,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
                 margin: const EdgeInsets.only(right: 10.0),
                 alignment: Alignment.center,
                 child: const TextCustom(
-                    text: 'Save',
-                    color: ColorsEnum.primaryColor,
-                    fontSize: 15),
+                    text: 'Save', color: ColorsEnum.primaryColor, fontSize: 15),
               ),
             ),
           ],
@@ -128,7 +126,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
               const SizedBox(height: 40.0),
               const TextCustom(text: 'Name'),
               const SizedBox(height: 5.0),
-              FormFieldFrave(
+              FormFieldValid(
                 controller: _nameController,
                 hintText: 'Enter your name',
                 validator: RequiredValidator(errorText: 'Name is required'),
@@ -136,7 +134,7 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
               const SizedBox(height: 15.0),
               const TextCustom(text: 'Phone'),
               const SizedBox(height: 5.0),
-              FormFieldFrave(
+              FormFieldValid(
                 controller: _phoneController,
                 hintText: '000-000-000',
                 keyboardType: TextInputType.number,
@@ -145,15 +143,15 @@ class _RegisterClientScreenState extends State<RegisterClientScreen> {
               const SizedBox(height: 15.0),
               const TextCustom(text: 'Email'),
               const SizedBox(height: 5.0),
-              FormFieldFrave(
+              FormFieldValid(
                   controller: _emailController,
-                  hintText: 'email@frave.com',
+                  hintText: 'email@gmail.com',
                   keyboardType: TextInputType.emailAddress,
                   validator: validatedEmail),
               const SizedBox(height: 15.0),
               const TextCustom(text: 'Password'),
               const SizedBox(height: 5.0),
-              FormFieldFrave(
+              FormFieldValid(
                 controller: _passwordController,
                 hintText: '********',
                 isPassword: true,

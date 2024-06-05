@@ -4,11 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:vision_aid/domain/bloc/blocs.dart';
-import 'package:vision_aid/domain/services/push_notification.dart';
-import 'package:vision_aid/presentation/screens/intro/checking_login_screen.dart';
+import 'package:vision_aid/presentation/screens/login/login_screen.dart';
 import 'firebase_options.dart';
-
-PushNotification pushNotification = PushNotification();
 
 Future<void> _firebaseMessagingBackground( RemoteMessage message ) async {
 
@@ -24,7 +21,6 @@ void main() async {
   
   );
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackground);
-  pushNotification.initNotifacion();
   runApp(MyApp());
 }
  
@@ -39,7 +35,6 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void initState() {
-    pushNotification.onMessagingListener();
     super.initState();
   }
 
@@ -50,22 +45,17 @@ class _MyAppState extends State<MyApp> {
 
     return MultiBlocProvider(
       providers: [ 
-        BlocProvider(create: (context) => AuthBloc()..add(CheckLoginEvent())),
+        BlocProvider(create: (context) => AuthBloc()),
         BlocProvider(create: (context) => GeneralBloc()),
-        BlocProvider(create: (context) => ProductsBloc()),
-        BlocProvider(create: (context) => CartBloc()),
         BlocProvider(create: (context) => UserBloc()),
         BlocProvider(create: (context) => MylocationmapBloc()),
-        BlocProvider(create: (context) => PaymentsBloc()),
         BlocProvider(create: (context) => DeviceBloc()),
-        BlocProvider(create: (context) => DeliveryBloc()),
         BlocProvider(create: (context) => MapdeliveryBloc()),
-        BlocProvider(create: (context) => MapclientBloc()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Food - Fraved',
-        home: CheckingLoginScreen(),
+        title: 'Vision Aid',
+        home: LoginScreen(),
       ),
     );
   }
