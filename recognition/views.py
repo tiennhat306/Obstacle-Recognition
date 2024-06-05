@@ -61,13 +61,13 @@ def process_detected_objects(objects, object_data):
         if name in object_data:
             processed_count = apply_custom_logic(name, count)
             processed_objects[name] = {
-                "count": processed_count,
+                "object_count_id": processed_count,
                 # "id": object_data[name]["id"],
                 "delay_time": object_data[name]["delay_time"],
             }
         else:
             processed_objects[name] = {
-                "count": count,
+                "object_count_id": count,
                 # "id": None,
                 "delay_time": None,
             }
