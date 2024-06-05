@@ -39,10 +39,10 @@ import cv2
 import math
 
 # Load the YOLO model
-model = YOLO(r"C:\Users\ngmv1\OneDrive\Máy tính\PBL5\Obstacle-Recognition\best (10).pt", "v8")
+model = YOLO(r"recognition/utils/YOLOv8_best.pt", "v8")
 
 # Path to the image you want to predict
-image_path = r"C:\Users\ngmv1\OneDrive\Máy tính\PBL5\Obstacle-Recognition\a.jfif"
+image_path = r"Obstacle-Recognition/a.png"
 # Read the image
 image = cv2.imread(image_path)
 

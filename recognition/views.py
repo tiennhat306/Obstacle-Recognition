@@ -7,8 +7,7 @@ import math
 
 import uuid
 import cv2
-
-from ultralytics import YOLO
+from .models import YOLOv8_model
 
 @api_view(['POST'])
 def detectObjects(request, *args, **kwargs):
@@ -27,11 +26,9 @@ def detectObjects(request, *args, **kwargs):
 
 
 def detect(img):
-    model = YOLO('recognition/utils/best (10).pt', 'v8')
+    result = YOLOv8_model(img)
 
-    result = model(img)
-
-    class_names = model.names
+    class_names = YOLOv8_model.names
 
     detected_objects = {}
     for info in result:
@@ -41,6 +38,7 @@ def detect(img):
             confidence = math.ceil(confidence * 100)
             class_idx = int(box.cls[0])
             class_name = class_names[class_idx]
+            print(class_name, confidence)
             if confidence > 50:
                 detected_objects[class_name] = detected_objects.get(class_name, 0) + 1
 
@@ -77,76 +75,27 @@ def process_detected_objects(objects, object_data):
     return processed_objects
 
 def apply_custom_logic(name, count):
-    if name == "People":
+    name_dict = {
+        "People": 0,
+        "Chair": 5,
+        "Car": 10,
+        "Table": 15,
+        "Cat": 20,
+        "Door": 25,
+        "Dog": 30,
+        "Bottle": 35,
+        "Smartphone": 40,
+        "Laptop": 45,
+        "Tường không có": 50,
+        "Bed": 55,
+        "Pothole": 60,
+        "Staircase": 65
+    }
+
+    if name in name_dict:
         if count <= 5:
-            return count
+            return count + name_dict[name]
         else:
-            return 5
-    elif name == "Chair":
-        if count <= 5:
-            return count + 5
-        else:
-            return 10
-    elif name == "Car":
-        if count <= 5:
-            return count + 10
-        else:
-            return 15
-    elif name == "Table":
-        if count <= 5:
-            return count + 15
-        else:
-            return 20
-    elif name == "Cat":
-        if count <= 5:
-            return count + 20
-        else:
-            return 25
-    elif name == "Door":
-        if count <= 5:
-            return count + 25
-        else:
-            return 30
-    elif name =="Dog":
-        if count <= 5:
-            return count + 30
-        else:
-            return 35
-    elif name == "Bottle":
-        if count <= 5:
-            return count + 35
-        else:
-            return 40
-    elif name == "Smartphone":
-        if count <= 5:
-            return count + 40
-        else:
-            return 45
-    elif name == "Laptop":
-        if count <= 5:
-            return count + 45
-        else:
-            return 50
-    elif name == "Tường không có":
-        if count <= 5:
-            return count + 50
-        else:
-            return 55
-    elif name == "Bed":
-        if count <= 5:
-            return count + 55
-        else:
-            return 60
-    elif name == "Pothole":
-        if count <= 5:
-            return count + 60
-        else:
-            return 65
-    elif name == "Staircase":
-        if count <= 5:
-            return count + 65
-        else:
-            return 70  
+            return name_dict[name] + 5
     else:
-       
         return count

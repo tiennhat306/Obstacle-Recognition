@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-)l3%j&!^3-3!h62rs&@0t0ldlph+l_t%aj)&&3498o#uwl)%0u
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -37,12 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
     'rest_framework',
-
     "recognition.apps.RecognitionConfig",
-    
-    'tensorflow',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -74,7 +71,16 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'ObstacleRecognition.wsgi.application'
+ASGI_APPLICATION = 'ObstacleRecognition.asgi.application'
 
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
