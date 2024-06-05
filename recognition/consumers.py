@@ -26,7 +26,7 @@ class ESP32CamConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             self.channel_name
         )
-        
+
     async def receive(self, bytes_data=None):
         print('Received data')
         if bytes_data:
@@ -37,7 +37,6 @@ class ESP32CamConsumer(AsyncWebsocketConsumer):
             print('Sending result')
             print(result)
             await self.send(text_data=json.dumps(result))
-
 
     async def process_image(self, image_data):
         image_np = np.array(bytearray(image_data), dtype=np.uint8)
