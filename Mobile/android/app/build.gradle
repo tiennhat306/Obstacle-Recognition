@@ -2,7 +2,7 @@ plugins {
     id "com.android.application"
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
-    id("com.google.gms.google-services")
+    id "com.google.gms.google-services"
 }
 
 def localProperties = new Properties()
@@ -25,7 +25,7 @@ if (flutterVersionName == null) {
 
 android {
     namespace "com.vision_aid.vision_aid"
-    compileSdk flutter.compileSdkVersion
+    compileSdk 34 //flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
 
     compileOptions {
@@ -46,8 +46,8 @@ android {
         applicationId "com.vision_aid.vision_aid"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdkVersion flutter.minSdkVersion
-        targetSdkVersion flutter.targetSdkVersion
+        minSdkVersion 30 //flutter.minSdkVersion
+        targetSdkVersion 34 // flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
@@ -66,6 +66,7 @@ flutter {
 }
 
 dependencies {
-    implementation(platform("com.google.firebase:firebase-bom:32.8.1"))
-    implementation("com.google.firebase:firebase-analytics")
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation platform('com.google.firebase:firebase-bom:29.2.0')
+//    implementation 'com.google.firebase:firebase-analytics'
 }
