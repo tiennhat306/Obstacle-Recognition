@@ -1,3 +1,4 @@
 from django.db import models
 
-# Create your models here.
+from ultralytics import YOLO
+YOLOv8_model = YOLO('recognition/utils/YOLOv8_best.pt', 'v8')

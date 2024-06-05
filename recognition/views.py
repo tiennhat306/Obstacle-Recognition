@@ -7,8 +7,7 @@ import math
 
 import uuid
 import cv2
-
-from ultralytics import YOLO
+from .models import YOLOv8_model
 
 @api_view(['POST'])
 def detectObjects(request, *args, **kwargs):
@@ -27,11 +26,9 @@ def detectObjects(request, *args, **kwargs):
 
 
 def detect(img):
-    model = YOLO('recognition/utils/best_clearML.pt', 'v8')
+    result = YOLOv8_model(img)
 
-    result = model(img)
-
-    class_names = model.names
+    class_names = YOLOv8_model.names
 
     detected_objects = {}
     for info in result:
@@ -41,6 +38,7 @@ def detect(img):
             confidence = math.ceil(confidence * 100)
             class_idx = int(box.cls[0])
             class_name = class_names[class_idx]
+            print(class_name, confidence)
             if confidence > 50:
                 detected_objects[class_name] = detected_objects.get(class_name, 0) + 1
 
