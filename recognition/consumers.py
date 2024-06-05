@@ -53,7 +53,7 @@ class ESP32CamConsumer(AsyncWebsocketConsumer):
 
         return result
     
-    def detect(img):
+    def detect(self, img):
         result = YOLOv8_model(img)
 
         class_names = YOLOv8_model.names
@@ -67,30 +67,61 @@ class ESP32CamConsumer(AsyncWebsocketConsumer):
                 class_idx = int(box.cls[0])
                 class_name = class_names[class_idx]
                 print(class_name, confidence)
-                if confidence > 70:
+                if confidence > 50:
                     detected_objects[class_name] = detected_objects.get(class_name, 0) + 1
 
         return detected_objects
 
 
-    def read_object_data_csv(filename):
+    def read_object_data_csv(self, filename):
         objects = {}
         with open(filename, 'r') as file:
             reader = csv.reader(file)
             next(reader, None)
             for row in reader:
                 name, id, delay_time = row
-                objects[name] = {'id': id, 'delay_time': int(delay_time)}
+                objects[name] = {'delay_time': int(delay_time)}
         return objects
+    
+    def apply_custom_logic(self, name, count):
+        name_dict = {
+            "People": 0,
+            "Chair": 5,
+            "Car": 10,
+            "Table": 15,
+            "Cat": 20,
+            "Door": 25,
+            "Dog": 30,
+            "Bottle": 35,
+            "Smartphone": 40,
+            "Laptop": 45,
+            "Tường không có": 50,
+            "Bed": 55,
+            "Pothole": 60,
+            "Staircase": 65
+        }
 
-    def process_detected_objects(objects, object_data):
+        if name in name_dict:
+            if count <= 5:
+                return count + name_dict[name]
+            else:
+                return name_dict[name] + 5
+        else:
+            return count
+
+    def process_detected_objects(self, objects, object_data):
         processed_objects = {}
         for name, count in objects.items():
             if name in object_data:
+                processed_count = self.apply_custom_logic(name, count)
                 processed_objects[name] = {
-                    "count": count,
-                    "id": object_data[name]["id"],
+                    "object_count_id": processed_count,
                     "delay_time": object_data[name]["delay_time"],
+                }
+            else:
+                processed_objects[name] = {
+                    "object_count_id": count,
+                    "delay_time": None,
                 }
 
         return processed_objects
