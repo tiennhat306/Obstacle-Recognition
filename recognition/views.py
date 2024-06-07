@@ -4,10 +4,10 @@ import numpy as np
 import csv
 import os
 import math
-
 import uuid
 import cv2
 from .models import YOLOv8_model
+from datetime import datetime
 
 @api_view(['POST'])
 def detectObjects(request, *args, **kwargs):
@@ -18,6 +18,9 @@ def detectObjects(request, *args, **kwargs):
 
     detected_objects = detect(image)
     object_data = read_object_data_csv('recognition/mapper/object_mapper.csv')
+    #Save image
+    image_path = os.path.join('recognition/postImage/', f"{uuid.uuid4()}.jpg")
+    cv2.imwrite(image_path, image)
 
     processed_objects = process_detected_objects(detected_objects, object_data)
 
@@ -39,7 +42,7 @@ def detect(img):
             class_idx = int(box.cls[0])
             class_name = class_names[class_idx]
             print(class_name, confidence)
-            if confidence > 50:
+            if confidence > 10:
                 detected_objects[class_name] = detected_objects.get(class_name, 0) + 1
 
     return detected_objects
@@ -62,13 +65,11 @@ def process_detected_objects(objects, object_data):
             processed_count = apply_custom_logic(name, count)
             processed_objects[name] = {
                 "object_count_id": processed_count,
-                # "id": object_data[name]["id"],
-                "delay_time": object_data[name]["delay_time"],
+                "delay_time": get_delay_time(str(processed_count))
             }
         else:
             processed_objects[name] = {
                 "object_count_id": count,
-                # "id": None,
                 "delay_time": None,
             }
 
@@ -86,12 +87,13 @@ def apply_custom_logic(name, count):
         "Bottle": 35,
         "Smartphone": 40,
         "Laptop": 45,
-        "Tường không có": 50,
-        "Bed": 55,
-        "Pothole": 60,
-        "Staircase": 65
+        # "Tường không có": 50,
+        "Bed": 50,
+        "Pothole": 55,
+        "Staircase": 60,
+        "Crosswalk": 65,
+        "Motorcycle": 70,
     }
-
     if name in name_dict:
         if count <= 5:
             return count + name_dict[name]
@@ -99,3 +101,11 @@ def apply_custom_logic(name, count):
             return name_dict[name] + 5
     else:
         return count
+
+def get_delay_time(file_name):
+    csv_file = 'recognition/mapper/audio_mapper.csv'
+    with open(csv_file, 'r', newline='', encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if row['file'] == file_name:
+                return int(row['delay_time'])
