@@ -79,7 +79,7 @@ class DeviceLocation {
       phone: json['phone'],
       latitude: location['latitude'],
       longitude: location['longitude'],
-      currentDate: DateTime.parse(location['date']),
+      currentDate: DateTime.parse(location['datetime']),
     );
   }
 }

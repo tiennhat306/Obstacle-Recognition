@@ -54,7 +54,7 @@ class DeviceBloc extends Bloc<DeviceEvent, DeviceState> {
       // final resp = await ordersServices.updateOrderStatusOnWay(event.idOrder, event.locationDelivery.latitude.toString(), event.locationDelivery.longitude.toString());
 
       Response resp = await deviceServices.updateDeviceNetwork(
-          event.deviceKey, event.name, event.password);
+          event.deviceKey, event.ipAddress, event.name, event.password);
 
       if (resp.statusCode == 200) {
         emit(SuccessDeviceNetworkState());
