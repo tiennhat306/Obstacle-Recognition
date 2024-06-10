@@ -74,7 +74,7 @@ class ProfileScreen extends StatelessWidget {
                     context, routeCustom(page: ChangePasswordScreen())),
               ),
               ItemAccount(
-                text: 'Add addresses',
+                text: 'Addresses',
                 icon: Icons.my_location_rounded,
                 colorIcon: 0xffFB5019,
                 onPressed: () => Navigator.push(

@@ -6,6 +6,7 @@ import 'package:vision_aid/data/local_secure/secure_storage.dart';
 import 'package:vision_aid/domain/models/response/device_all_response.dart';
 import 'package:vision_aid/domain/models/response/response_default.dart';
 import 'package:vision_aid/firebase/firebase_helper.dart';
+import 'package:vision_aid/presentation/helpers/custom_markert.dart';
 
 class DeviceServices {
   final FirebaseHelper _firebaseHelper = FirebaseHelper();
@@ -57,11 +58,11 @@ class DeviceServices {
 
   // update devive network by deviceKey, name, password thong qua uri:     final response = await http.get(Uri.parse('${Environment.endpointApi}/get-user-by-id'),  headers: {'Accept': 'application/json', 'xx-token': token!}); và trả về status code và message
   Future<http.Response> updateDeviceNetwork(
-      String deviceKey, String name, String password) async {
+      String deviceKey, String ipAddress, String name, String password) async {
     final token = await secureStorage.readToken();
 
     final response = await http.put(
-        Uri.parse('${Environment.endpointBase}/change-public-wifi'),
+        Uri.parse('$ipAddress/change-public-wifi'),
         // headers: {'Content-Type': 'application/json'},
         // add headers content type
         headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},

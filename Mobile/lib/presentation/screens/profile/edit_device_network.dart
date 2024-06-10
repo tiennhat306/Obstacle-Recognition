@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:form_field_validator/form_field_validator.dart';
+import 'package:vision_aid/data/env/environment.dart';
 import 'package:vision_aid/domain/bloc/blocs.dart';
 import 'package:vision_aid/domain/models/response/device_all_response.dart';
 import 'package:vision_aid/domain/services/services.dart';
@@ -16,6 +17,7 @@ class EditDeviceNetworkScreen extends StatefulWidget {
 
 class _EditDeviceNetworkScreenState extends State<EditDeviceNetworkScreen> {
   TextEditingController _deviceController = TextEditingController();
+  TextEditingController _ipController = TextEditingController(text: Environment.endpointBase);
   TextEditingController _nameController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
 
@@ -39,9 +41,11 @@ class _EditDeviceNetworkScreenState extends State<EditDeviceNetworkScreen> {
   @override
   void dispose() {
     _deviceController.clear();
+    _ipController.clear();
     _nameController.clear();
     _passwordController.clear();
     _deviceController.dispose();
+    _ipController.dispose();
     _nameController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -88,6 +92,7 @@ class _EditDeviceNetworkScreenState extends State<EditDeviceNetworkScreen> {
                   if (_keyForm.currentState!.validate()) {
                     deviceBloc.add(OnEditDeviceNetworkEvent(
                         _deviceController.text,
+                        _ipController.text,
                         _nameController.text,
                         _passwordController.text));
                   }
@@ -143,6 +148,16 @@ class _EditDeviceNetworkScreenState extends State<EditDeviceNetworkScreen> {
                       }
                       return CircularProgressIndicator();
                     },
+                  ),
+                  const SizedBox(height: 20.0),
+                  const TextCustom(
+                      text: 'IP Address', color: ColorsEnum.secundaryColor),
+                  const SizedBox(height: 5.0),
+                  FormFieldValid(
+                    controller: _ipController,
+                    keyboardType: TextInputType.text,
+                    // hintText: '000-000-000',
+                    validator: RequiredValidator(errorText: 'IP Address is required'),
                   ),
                   const SizedBox(height: 20.0),
                   const TextCustom(
