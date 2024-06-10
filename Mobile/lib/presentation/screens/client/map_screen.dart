@@ -122,7 +122,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     return Scaffold(
         body: StreamBuilder<DeviceLocation>(
             stream: userServices.getDeviceLocation(widget.deviceId, deviceBloc),
-            builder: (context, snapshot) {
+            builder: (context, snapshot) {              
               // return (snapshot.hasData)
               //     ? _MapDelivery(
               //         sourceLocation: widget.source,
@@ -130,10 +130,12 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               //     : const Center(child: CircularProgressIndicator());
               return BlocBuilder<DeviceBloc, DeviceState>(
                   builder: (context, state) {
-                if (state.deviceLocation!.latitude == null &&
-                    state.deviceLocation!.longitude == 0) {
-                  return Center(child: CircularProgressIndicator());
-                }
+                  if (state.deviceLocation == null) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                // if (state.deviceLocation == null) {
+                //   return Center(child: CircularProgressIndicator());
+                // }
 
                 // var deviceLocation = snapshot.data!;
                 // return BlocBuilder<MylocationmapBloc, MylocationmapState>(
@@ -164,8 +166,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     LatLng(state.deviceLocation!.latitude,
                         state.deviceLocation!.longitude)));
 
-                return (state.deviceLocation!.latitude != 0 &&
-                        state.deviceLocation!.longitude != 0)
+                return (state.deviceLocation != null)
                     ? Stack(
                         children: <Widget>[
                           GoogleMap(
@@ -457,9 +458,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                           )
                         ],
                       )
-                    : Center(
-                        child: const TextCustom(text: 'Locating...'),
-                      );
+                    : Center(child: CircularProgressIndicator());
               });
             }));
   }
