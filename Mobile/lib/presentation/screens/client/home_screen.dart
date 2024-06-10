@@ -5,6 +5,7 @@ import 'package:vision_aid/domain/models/response/device_all_response.dart';
 import 'package:vision_aid/domain/services/services.dart';
 import 'package:vision_aid/presentation/components/components.dart';
 import 'package:vision_aid/presentation/helpers/date_custom.dart';
+import 'package:vision_aid/presentation/screens/client/history_screen.dart';
 import 'package:vision_aid/presentation/screens/client/map_screen.dart';
 import 'package:vision_aid/presentation/themes/colors.dart';
 
@@ -155,12 +156,17 @@ class HomeScreen extends StatelessWidget {
                                               text: device[i].username ??
                                                   'Vị Trí Người Thân'),
                                           InkWell(
-                                            // onTap: () => Navigator.push(
-                                            //     context, routeFrave(page: ListAddressesScreen())),
-                                            onTap: () => (),
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        HistoryScreen(deviceId: device[i].id)),
+                                              );
+                                            },
                                             child: TextCustom(
                                               text:
-                                                  'Xác định vị trí',
+                                                  'Lịch sử vị trí',
                                               color: ColorsEnum.primaryColor,
                                               fontSize: 17,
                                               maxLine: 1,
@@ -232,21 +238,6 @@ class HomeScreen extends StatelessWidget {
             //           );
             //   },
             // ),
-            // const SizedBox(height: 20.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                TextCustom(
-                    text: 'Lịch Sử Di Chuyển',
-                    fontSize: 21,
-                    fontWeight: FontWeight.w500),
-                TextCustom(
-                    text: 'Xem tất cả',
-                    color: ColorsEnum.primaryColor,
-                    fontSize: 17)
-              ],
-            ),
-            const SizedBox(height: 20.0),
             // _ListProducts(),
             // const SizedBox(height: 20.0),
           ],

@@ -11,10 +11,11 @@ class OnGetDeviceLocationEvent extends DeviceEvent {
 
 class OnEditDeviceNetworkEvent extends DeviceEvent {
   final String deviceKey;
+  final String ipAddress;
   final String name;
   final String password;
 
-  OnEditDeviceNetworkEvent(this.deviceKey, this.name, this.password);
+  OnEditDeviceNetworkEvent(this.deviceKey, this.ipAddress, this.name, this.password);
 }
 
 class OnAddDeviceEvent extends DeviceEvent {
