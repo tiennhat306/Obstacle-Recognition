@@ -98,8 +98,8 @@ public:
     if (!WiFi.softAP(LOCAL_SSID, localPassword, 1, 0, 4)) return false;
   
     // Cấu hình địa chỉ IP của Access Point (tùy chọn)
-    IPAddress ip(192, 168, 1, 1);
-    IPAddress gateway(192, 168, 1, 1);
+    IPAddress ip(192, 168, 200, 1);
+    IPAddress gateway(192, 168, 200, 1);
     IPAddress subnet(255, 255, 255, 0);
     if (!WiFi.softAPConfig(ip, gateway, subnet)) return false;
   

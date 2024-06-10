@@ -14,12 +14,6 @@
 #include <TinyGPSPlus.h>
 #include "LocationUploader.h"
 
-#define UPLOAD_BY_WEBSOCKET // comment it if want to use Http API instead
-
-#ifdef UPLOAD_BY_WEBSOCKET
-#include "ImageRecognizer.h"
-#endif
-
 #define LED_LEDC_CHANNEL 2 //Using different ledc channel/timer than camera
 #define LED_BUILTIN 33
 
@@ -27,13 +21,8 @@
 #define TRIG_PIN 4 // PWM trigger
 #define ECHO_PIN 2 // PWM Output 0-25000US, Every 50US represent 1cm 
 
-const String apiEndpoint = "http://192.168.43.69:8888/detect/";
-// const String apiEndpoint = "http://192.168.43.69:8888/detect/";
-// const String apiEndpoint = "http://localhost:8888/detect/";
-
-#ifdef UPLOAD_BY_WEBSOCKET
-const String websocketServerAddress = "ws://192.168.1.22";
-#endif
+const String apiEndpoint = "http://192.168.43.69:8888/detect/"; 
+// const String apiEndpoint = "http://192.168.1.15:8888/detect/"; 
 
 // Timer
 unsigned int recognizeTimer = 0;
@@ -47,11 +36,6 @@ DFRobotDFPlayerMini player;
 // GPS Reader instance
 SoftwareSerial serialGPS(12,13);
 TinyGPSPlus gps;
-
-#ifdef UPLOAD_BY_WEBSOCKET
-// Recognizer by using webocket
-ImageRecognizer websocketRecognizer;
-#endif
 
 void initCamera() {
   // Stores the camera configuration parameters
@@ -78,10 +62,10 @@ void initCamera() {
   config.pixel_format = PIXFORMAT_JPEG; //YUV422,GRAYSCALE,RGB565,JPEG
 
   // Select lower framesize if the camera doesn't support PSRAM
-  config.frame_size = FRAMESIZE_QVGA; //FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA
+  config.frame_size = FRAMESIZE_VGA; //FRAMESIZE_ + QVGA|CIF|VGA|SVGA|XGA|SXGA|UXGA
   if(psramFound()){
     config.jpeg_quality = 15; //0-63 lower number means higher quality
-    config.fb_count = 2;
+    config.fb_count = 1;
   } else {
     config.jpeg_quality = 20;
     config.fb_count = 1;
@@ -97,6 +81,7 @@ void initCamera() {
   sensor_t * s = esp_camera_sensor_get();
   // reverse the image if you need to
   s->set_vflip(s, 1);
+  s->set_hmirror(s, 1);
 }
 
 void setupLedFlash(int pin) {
@@ -119,7 +104,7 @@ void showResult(String json){
     Serial.println(quantity);
   }
 } 
-void playFolder(String jsonString) {
+void playAudio(String jsonString, int dis) {
   int count = 0, name = 0, length = 0;
   DynamicJsonDocument doc(512);
 
@@ -127,13 +112,11 @@ void playFolder(String jsonString) {
 
   if (error) return;
 
-  JsonObject data = doc["data"];  
-  int numberOfObject = 0;
-  int tmp = 0;
-  for (JsonPair kv : data) {
-    if (kv.value().is<JsonObject>()) {
-      numberOfObject += 1;
-    }
+  JsonObject data = doc["data"];
+  if (data.size() == 0 && dis <= 100) {
+    player.play(76);
+    delay(1600);
+    return;
   }
   for (JsonPair kv : data) {
     if (kv.value().is<JsonObject>()) {
@@ -142,24 +125,19 @@ void playFolder(String jsonString) {
       for (JsonPair inner_kv : obj) {
         String key = inner_kv.key().c_str();
         int val = inner_kv.value().as<const int>(); 
-        if(key == "count") count = val; 
+        if(key == "object_count_id") count = val; 
         if(key == "delay_time") length = val;
       }
       Serial.println(count); 
       Serial.println(length);
       if(count != 0 && length !=0){
         Serial.println("phat nhac"); 
-        player.play(count);
-        if(tmp<numberOfObject-1){
-          delay(length); 
-        }
+        player.play(count); 
+        delay(length);  
       }
     }
-    tmp++;
   } 
-  
 }
-
 
 // Post image fb to apiEndpoint via form-data with key "image"
 int postHttpRequest(camera_fb_t* fb, const String* endpoint, HTTPClient* httpClient) {
@@ -179,7 +157,7 @@ int postHttpRequest(camera_fb_t* fb, const String* endpoint, HTTPClient* httpCli
   return responseCode;
 }
 
-void recognizeObstacle() {
+void recognizeObstacle(int dis) {
   // Capture the image
   Serial.println("Capturing image");
   camera_fb_t* fb = esp_camera_fb_get();
@@ -193,24 +171,15 @@ void recognizeObstacle() {
   if (Wifi::status() == WL_CONNECTED) {
     Serial.println("Sending request to server");
 
-#ifdef UPLOAD_BY_WEBSOCKET
-    bool result = websocketRecognizer.sendImage(fb);
-    if (result) {
-      Serial.println("Send image to websocket server successful");
-    } else {
-      Serial.println("ERROR: Failed to send image to websocket server!");
-    }
-#else
     HTTPClient httpClient;
     int responseCode = postHttpRequest(fb, &apiEndpoint, &httpClient);
     
     if (responseCode > 0) {
       String jsonResponse = httpClient.getString();
-      Serial.print("Image upload successful, server response: ");
-      Serial.println(jsonResponse);
+      Serial.print("Image upload successful, server response: "); 
       showResult(jsonResponse);
       Serial.println("------------");
-      playFolder(jsonResponse);
+      playAudio(jsonResponse, dis);
     } else {
       Serial.print("Image upload failed, error code: ");
       Serial.println(responseCode);
@@ -219,7 +188,6 @@ void recognizeObstacle() {
     }
 
     httpClient.end();
-#endif
   } else {
     Serial.println("WiFi not connected, image upload skipped");
   }
@@ -247,7 +215,6 @@ void setup() {
   } else{
     Serial.println("SPIFFS mounted successfully");
   }
-
   
   // Setup WiFi
   Wifi::init();
@@ -270,17 +237,13 @@ void setup() {
   }
   
   initCamera();
-//  setupLedFlash(LED_GPIO_NUM);
+  //setupLedFlash(LED_GPIO_NUM);
 
   WebServer::start();
 
-#ifdef UPLOAD_BY_WEBSOCKET
-  websocketRecognizer.begin(websocketServerAddress, 80);
-  websocketRecognizer.addHandler(playFolder);
-#endif
-
   // List file in SPIFFS
   FileOperation::listDir("/", 0);
+  delay(1000);
 
   FileOperation::readFileToSerial(Wifi::PUBLIC_WIFI_CONF_FILE);
   FileOperation::readFileToSerial(Wifi::LOCAL_WIFI_CONF_FILE);
@@ -292,29 +255,18 @@ void loop() {
     delay(10000);
     return;
   }
-#ifdef UPLOAD_BY_WEBSOCKET
-  websocketRecognizer.loop();
-#endif
-  
+
   /// GPS logic
   double tmpLat = 0;
   double tmpLng = 0;
-
   while (serialGPS.available()>0) {
-    gps.encode(serialGPS.read());  
-    // if(gps.location.isUpdated()){
-    // Serial.print("Lat: ");
-    // Serial.print(gps.location.lat(),6);
-    // Serial.print(", Long: "); 
-    // Serial.println(gps.location.lng(),6); 
+    gps.encode(serialGPS.read());   
     tmpLat =  gps.location.lat();
-    tmpLng =  gps.location.lng();
-    // }
+    tmpLng =  gps.location.lng(); 
   }
 
   if (tmpLat != 0 && tmpLng != 0 && LocationUploader::isUpdated(tmpLat, tmpLng)) {
-    Serial.println("Send GPS");
-    
+    Serial.println("Send GPS"); 
     Serial.print("Lat: ");
     Serial.print(tmpLat);
     Serial.print(", Long: "); 
@@ -331,10 +283,10 @@ void loop() {
   Serial.println(" (cm)");
   
   if (millis() - recognizeTimer > 1000) {
-    if (disFromObs < 100) {
+    if (disFromObs < 200) {
       Serial.println("Start recognization");
       recognizeTimer = millis();
-      recognizeObstacle();
+      recognizeObstacle(disFromObs);
     }
   } 
   Serial.println("---------------");  
