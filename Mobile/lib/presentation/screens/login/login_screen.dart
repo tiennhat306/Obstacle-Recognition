@@ -109,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Container(
                   alignment: Alignment.center,
                   child: const TextCustom(
-                      text: 'Welcome back!',
+                      text: 'Chào mừng đã trở lại!',
                       fontSize: 35,
                       fontWeight: FontWeight.bold,
                       color: Color(0xff14222E)),
@@ -119,14 +119,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   alignment: Alignment.center,
                   child: const TextCustom(
                       text:
-                          'Use your credentials below and login to your account.',
+                          'Đăng nhập để tiếp tục.',
                       textAlign: TextAlign.center,
                       color: Colors.grey,
                       maxLine: 2,
                       fontSize: 16),
                 ),
                 const SizedBox(height: 50.0),
-                const TextCustom(text: 'Email Address'),
+                const TextCustom(text: 'Email'),
                 const SizedBox(height: 5.0),
                 FormFieldValid(
                   controller: _emailController,
@@ -150,7 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         onTap: () => Navigator.push(
                             context, routeCustom(page: ForgotPasswordScreen())),
                         child: TextCustom(
-                            text: 'Forgot Password?',
+                            text: 'Quên mật khẩu?',
                             fontSize: 17,
                             color: ColorsEnum.primaryColor))),
                 const SizedBox(height: 40.0),
