@@ -26,14 +26,12 @@ class AddressesResponse {
 }
 
 class ListAddress {
-  final String street;
   final String reference;
   final double latitude;
   final double longitude;
   bool isDefault;
 
   ListAddress({
-    required this.street,
     required this.reference,
     required this.latitude,
     required this.longitude,
@@ -45,7 +43,6 @@ class ListAddress {
   }
 
   factory ListAddress.fromJson(Map<String, dynamic> json) => ListAddress(
-        street: json["street"],
         reference: json["reference"],
         latitude: (json["latitude"] as num).toDouble(),
         longitude: (json["longitude"] as num).toDouble(),

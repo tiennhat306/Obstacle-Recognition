@@ -259,13 +259,13 @@ class _ListAddressesState extends State<_ListAddresses> {
                                       color: ColorsEnum.primaryColor)
                                   : Icon(Icons.radio_button_off_rounded)),
                       title: TextCustom(
-                          text: widget.listAddress[i].street,
+                          text: widget.listAddress[i].reference,
                           fontSize: 20,
                           fontWeight: FontWeight.w500),
-                      subtitle: TextCustom(
-                          text: widget.listAddress[i].reference,
-                          fontSize: 16,
-                          color: ColorsEnum.secundaryColor),
+                      // subtitle: TextCustom(
+                      //     text: widget.listAddress[i].reference,
+                      //     fontSize: 16,
+                      //     color: ColorsEnum.secundaryColor),
                       trailing: Icon(Icons.swap_horiz_rounded,
                           color: Colors.red[300]),
                       onTap: () async {
