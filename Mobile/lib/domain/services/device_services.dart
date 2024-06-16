@@ -63,7 +63,8 @@ class DeviceServices {
     final token = await secureStorage.readToken();
 
     final response = await http.put(
-        Uri.parse('$ipAddress/change-public-wifi'),
+        // Uri.parse('$ipAddress/change-public-wifi'), 
+        Uri.parse('http://$ipAddress/change-public-wifi'),
         // headers: {'Content-Type': 'application/json'},
         // add headers content type
         headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
