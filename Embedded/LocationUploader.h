@@ -14,7 +14,7 @@ private:
   double lastLng = -1;
   bool wasInited = false;
   
-  const double ESL = 0.02;  // Nguỡng thực hiện sự cập nhật
+  const double ESL = 0.002;  // Nguỡng thực hiện sự cập nhật
   LocationUploader() {}
   
   static LocationUploader& getInstance() {

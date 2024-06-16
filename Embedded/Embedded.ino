@@ -265,7 +265,7 @@ void loop() {
     tmpLng =  gps.location.lng(); 
   }
 
-  if (tmpLat != 0 && tmpLng != 0 && LocationUploader::isUpdated(tmpLat, tmpLng)) {
+  if (tmpLat != 0 && tmpLng != 0 && LocationUploader::isU1pdated(tmpLat, tmpLng)) {
     Serial.println("Send GPS"); 
     Serial.print("Lat: ");
     Serial.print(tmpLat);
